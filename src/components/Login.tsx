@@ -4,9 +4,11 @@ const TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new'
 
 interface Props {
   onLogin: (token: string, remember: boolean) => Promise<void>
+  onInstall: (() => void) | null
+  online: boolean
 }
 
-export default function Login({ onLogin }: Props) {
+export default function Login({ onLogin, onInstall, online }: Props) {
   const [token, setToken] = useState('')
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +31,12 @@ export default function Login({ onLogin }: Props) {
     <main className="login">
       <h1>Mis repos</h1>
       <p className="muted">Administrá tus repositorios de GitHub desde un solo lugar.</p>
+      {onInstall && (
+        <button className="install" onClick={onInstall}>
+          Instalar como app
+        </button>
+      )}
+      {!online && <p className="offline">Sin conexión. Conectate a internet para entrar.</p>}
 
       <form onSubmit={submit} className="card">
         <label htmlFor="token">Token personal de GitHub</label>
@@ -46,7 +54,7 @@ export default function Login({ onLogin }: Props) {
           Recordarlo en este navegador
         </label>
         {error && <p className="error">{error}</p>}
-        <button type="submit" className="primary" disabled={loading || !token.trim()}>
+        <button type="submit" className="primary" disabled={loading || !token.trim() || !online}>
           {loading ? 'Entrando…' : 'Entrar'}
         </button>
       </form>

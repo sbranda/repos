@@ -10,6 +10,15 @@ App web para administrar mis repositorios de GitHub desde un solo lugar. Se publ
 - Acciones en lote sobre varios repos a la vez: archivar, desarchivar, hacer privados o públicos.
 - Todo cambio pide confirmación antes de aplicarse. Borrar repos no está disponible a propósito.
 
+## Instalarla como app (PWA)
+
+La app se puede instalar en el celular o la computadora:
+
+- **Chrome o Edge (Android, Windows, Mac, Linux):** tocá **Instalar app** en la barra de arriba, o el ícono de instalar en la barra de direcciones.
+- **iPhone o iPad (Safari):** botón Compartir → **Agregar a pantalla de inicio**.
+
+Instalada se abre en su propia ventana y carga aunque no haya conexión. Los datos de tus repos y el token nunca se guardan en caché: sin internet solo se ve la pantalla, y los cambios necesitan conexión.
+
 ## Cómo entrar
 
 La app es estática y corre entera en tu navegador. Para hablar con GitHub usa un **token personal** que pegás al entrar:
