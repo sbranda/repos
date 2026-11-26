@@ -186,6 +186,17 @@ ul.plain li {
   overflow: auto;
 }
 
+.offline {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0;
+}
+button.install {
+  justify-self: start;
+}
+
 /* Login */
 .login {
   max-width: 460px;

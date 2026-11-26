@@ -5,6 +5,7 @@ import Login from './components/Login'
 import RepoList, { applyFilters, DEFAULT_FILTERS, type Filters } from './components/RepoList'
 import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
+import { useInstallPrompt, useOnline } from './pwa'
 
 const TOKEN_KEY = 'repos:token'
 
@@ -18,6 +19,8 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [booting, setBooting] = useState(true)
+  const install = useInstallPrompt()
+  const online = useOnline()
 
   const login = useCallback(async (token: string, remember: boolean) => {
     const client = new GitHub(token)
@@ -44,7 +47,10 @@ export default function App() {
       return
     }
     login(saved, !!localStorageHas(TOKEN_KEY))
-      .catch(() => storage.remove(TOKEN_KEY))
+      // Solo olvidamos el token si GitHub lo rechaza, no si falta conexión.
+      .catch((err) => {
+        if (err instanceof GitHubError && err.status === 401) storage.remove(TOKEN_KEY)
+      })
       .finally(() => setBooting(false))
   }, [login])
 
@@ -75,7 +81,7 @@ export default function App() {
   const checkedRepos = repos.filter((r) => checked.has(r.id))
 
   if (booting) return <main className="login muted">Cargando…</main>
-  if (!gh || !user) return <Login onLogin={login} />
+  if (!gh || !user) return <Login onLogin={login} onInstall={install} online={online} />
 
   return (
     <div className="app">
@@ -84,13 +90,19 @@ export default function App() {
         <div className="user">
           <img src={user.avatar_url} alt="" width={28} height={28} />
           <span>{user.login}</span>
-          <button onClick={reload} disabled={loading}>
+          {install && (
+            <button className="primary" onClick={install}>
+              Instalar app
+            </button>
+          )}
+          <button onClick={reload} disabled={loading || !online}>
             {loading ? 'Actualizando…' : 'Actualizar'}
           </button>
           <button onClick={logout}>Salir</button>
         </div>
       </header>
 
+      {!online && <p className="offline banner">Sin conexión. Vas a poder ver y cambiar tus repos cuando vuelva internet.</p>}
       {error && <p className="error banner">{error}</p>}
 
       <div className={`layout ${selected ? 'with-detail' : ''}`}>
