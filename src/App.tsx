@@ -9,7 +9,8 @@ import BatchBar from './components/BatchBar'
 import Summary from './components/Summary'
 import { useInstallPrompt, useOnline } from './pwa'
 import Logo from './components/Logo'
-import { Download, LayoutDashboard, LayoutGrid, LogOut, RefreshCw, WifiOff } from 'lucide-react'
+import NewRepoDialog from './components/NewRepoDialog'
+import { Download, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
 const VIEW_KEY = 'repos:view'
@@ -31,6 +32,7 @@ export default function App() {
   }, [])
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [booting, setBooting] = useState(true)
+  const [creating, setCreating] = useState(false)
   // Cuándo se trajo la lista de GitHub por última vez (para "Actualizada hace…").
   const [savedAt, setSavedAt] = useState<number | null>(null)
   // La lista guardada vive donde vive el token: localStorage si eligió "Recordarlo".
@@ -139,10 +141,13 @@ export default function App() {
         </div>
         <div className="user">
           {install && (
-            <button className="primary" onClick={install}>
+            <button onClick={install}>
               <Download size={16} /> <span className="hide-sm">Instalar app</span>
             </button>
           )}
+          <button className="primary" onClick={() => setCreating(true)} disabled={!online} title="Crear un repo nuevo">
+            <Plus size={16} /> <span className="hide-sm">Nuevo repo</span>
+          </button>
           <button className="icon-btn" onClick={reload} disabled={loading || !online} title="Actualizar" aria-label="Actualizar">
             <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
@@ -221,6 +226,23 @@ export default function App() {
           </section>
         )}
       </div>
+      )}
+
+      {creating && (
+        <NewRepoDialog
+          gh={gh}
+          login={user.login}
+          repos={repos}
+          knownTopics={knownTopics}
+          onCreated={(r) => {
+            // Lo sumamos arriba de todo y lo dejamos abierto, sin filtros que lo escondan.
+            setRepos((list) => [r, ...list.filter((x) => x.id !== r.id)])
+            setFilters(DEFAULT_FILTERS)
+            setView('repos')
+            setSelectedId(r.id)
+          }}
+          onClose={() => setCreating(false)}
+        />
       )}
 
       {view === 'repos' && checkedRepos.length > 0 && (

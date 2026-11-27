@@ -70,6 +70,18 @@ export interface PagesSite {
   https_enforced?: boolean
 }
 
+export interface NewRepo {
+  name: string
+  description: string
+  private: boolean
+  /** Crea el primer commit con un README. */
+  auto_init: boolean
+  /** Plantilla de .gitignore de GitHub (ej. "Node"), o '' para ninguna. */
+  gitignore_template: string
+  /** Clave de licencia de GitHub (ej. "mit"), o '' para ninguna. */
+  license_template: string
+}
+
 /** Desde dónde publica GitHub Pages: una rama (y carpeta) o un workflow de GitHub Actions. */
 export type PagesSource = { type: 'workflow' } | { type: 'branch'; branch: string; path: '/' | '/docs' }
 
@@ -285,6 +297,32 @@ export class GitHub {
       updated = { ...updated, topics: data.names }
     }
     return updated
+  }
+
+  async createRepo(repo: NewRepo): Promise<Repo> {
+    const body: Record<string, unknown> = {
+      name: repo.name,
+      description: repo.description || undefined,
+      private: repo.private,
+      auto_init: repo.auto_init,
+    }
+    if (repo.gitignore_template) body.gitignore_template = repo.gitignore_template
+    if (repo.license_template) body.license_template = repo.license_template
+    try {
+      const { data } = await this.request<Repo>('/user/repos', { method: 'POST', body: JSON.stringify(body) })
+      return data
+    } catch (err) {
+      if (err instanceof GitHubError && err.status === 422 && /already exists/i.test(err.message)) {
+        throw new GitHubError(422, `Ya tenés un repo llamado "${repo.name}".`)
+      }
+      if (err instanceof GitHubError && (err.status === 403 || err.status === 404)) {
+        throw new GitHubError(
+          err.status,
+          'GitHub no dejó crear el repo. Revisá que el token tenga "All repositories" y el permiso "Administration: Read and write".',
+        )
+      }
+      throw err
+    }
   }
 }
 
