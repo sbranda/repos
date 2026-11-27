@@ -20,6 +20,7 @@ export interface Repo {
   stargazers_count: number
   open_issues_count: number
   homepage: string | null
+  has_pages: boolean
 }
 
 export interface User {
@@ -58,6 +59,17 @@ export interface WorkflowRun {
   head_branch: string | null
   created_at: string
 }
+
+export interface PagesSite {
+  html_url: string | null
+  status: 'built' | 'building' | 'errored' | null
+  build_type: 'legacy' | 'workflow' | null
+  source?: { branch: string; path: '/' | '/docs' } | null
+  https_enforced?: boolean
+}
+
+/** Desde dónde publica GitHub Pages: una rama (y carpeta) o un workflow de GitHub Actions. */
+export type PagesSource = { type: 'workflow' } | { type: 'branch'; branch: string; path: '/' | '/docs' }
 
 export interface RepoChanges {
   name?: string
@@ -152,12 +164,70 @@ export class GitHub {
     return data.workflow_runs[0] ?? null
   }
 
+  /** Sitio de GitHub Pages del repo, o null si no tiene Pages activado. */
+  async getPages(repo: Repo): Promise<PagesSite | null> {
+    try {
+      return (await this.request<PagesSite>(`/repos/${repo.full_name}/pages`)).data
+    } catch (err) {
+      if (err instanceof GitHubError && err.status === 404) return null
+      throw pagesHint(err)
+    }
+  }
+
+  async enablePages(repo: Repo, source: PagesSource): Promise<PagesSite> {
+    try {
+      const { data } = await this.request<PagesSite>(`/repos/${repo.full_name}/pages`, {
+        method: 'POST',
+        body: JSON.stringify(pagesBody(source)),
+      })
+      return data
+    } catch (err) {
+      throw pagesHint(err)
+    }
+  }
+
+  async updatePagesSource(repo: Repo, source: PagesSource): Promise<void> {
+    try {
+      await this.request<void>(`/repos/${repo.full_name}/pages`, {
+        method: 'PUT',
+        body: JSON.stringify(pagesBody(source)),
+      })
+    } catch (err) {
+      throw pagesHint(err)
+    }
+  }
+
+  async disablePages(repo: Repo): Promise<void> {
+    try {
+      await this.request<void>(`/repos/${repo.full_name}/pages`, { method: 'DELETE' })
+    } catch (err) {
+      throw pagesHint(err)
+    }
+  }
+
   updateRepo(repo: Repo, changes: RepoChanges) {
     return this.request<Repo>(`/repos/${repo.full_name}`, {
       method: 'PATCH',
       body: JSON.stringify(changes),
     }).then((r) => r.data)
   }
+}
+
+function pagesBody(source: PagesSource) {
+  return source.type === 'workflow'
+    ? { build_type: 'workflow' }
+    : { build_type: 'legacy', source: { branch: source.branch, path: source.path } }
+}
+
+/** Los errores de permisos en Pages suelen ser por el token: lo aclaramos. */
+function pagesHint(err: unknown): unknown {
+  if (err instanceof GitHubError && (err.status === 403 || err.status === 404)) {
+    return new GitHubError(
+      err.status,
+      'GitHub no dejó manejar Pages en este repo. Revisá que el token tenga el permiso "Pages: Read and write".',
+    )
+  }
+  return err
 }
 
 function parseNext(link: string | null): string | null {
