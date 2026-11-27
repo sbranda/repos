@@ -1631,3 +1631,86 @@ li.commit {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============ Etiquetas (topics) ============ */
+.topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  background: var(--blue-soft);
+  color: var(--blue);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.topic.more {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.topic.active {
+  border-color: var(--blue);
+}
+button.topic {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+button.topic:hover {
+  border-color: var(--blue);
+}
+.topic button {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  margin-right: -0.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.topic button:hover {
+  background: rgb(37 99 235 / 0.15);
+}
+.topic-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.card-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  overflow: hidden;
+  max-height: 3.4rem;
+}
+.edit-form .field {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.topics-input {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 400;
+}
+.topics-input .topic-list {
+  margin: 0;
+}
+.topic-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.topic-entry input {
+  flex: 1;
+}

@@ -3,7 +3,7 @@ import { GitHub, GitHubError, type Repo, type User } from './github'
 import { storage } from './util'
 import { clearCache, loadCache, saveCache } from './cache'
 import Login from './components/Login'
-import RepoList, { applyFilters, DEFAULT_FILTERS, type Filters } from './components/RepoList'
+import RepoList, { allTopics, applyFilters, DEFAULT_FILTERS, type Filters } from './components/RepoList'
 import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
 import Summary from './components/Summary'
@@ -120,6 +120,7 @@ export default function App() {
     setRepos((list) => list.map((r) => (r.id === updated.id ? updated : r)))
   }, [])
 
+  const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
   const visible = useMemo(() => applyFilters(repos, filters), [repos, filters])
   const selected = repos.find((r) => r.id === selectedId) ?? null
   const checkedRepos = repos.filter((r) => checked.has(r.id))
@@ -214,6 +215,8 @@ export default function App() {
               repo={selected}
               onUpdated={replaceRepo}
               onClose={() => setSelectedId(null)}
+              knownTopics={knownTopics}
+              onTopic={(topic) => setFilters({ ...DEFAULT_FILTERS, status: filters.status, topic })}
             />
           </section>
         )}

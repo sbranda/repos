@@ -7,6 +7,7 @@ import { languageColor } from '../languages'
 export interface Filters {
   text: string
   language: string
+  topic: string
   visibility: 'all' | 'public' | 'private'
   status: 'active' | 'archived' | 'all'
   forks: boolean
@@ -18,6 +19,7 @@ export interface Filters {
 export const DEFAULT_FILTERS: Filters = {
   text: '',
   language: '',
+  topic: '',
   visibility: 'all',
   status: 'active',
   forks: true,
@@ -29,7 +31,14 @@ export const DEFAULT_FILTERS: Filters = {
 export function applyFilters(repos: Repo[], f: Filters): Repo[] {
   const q = f.text.trim().toLowerCase()
   const out = repos.filter((r) => {
-    if (q && !r.name.toLowerCase().includes(q) && !(r.description ?? '').toLowerCase().includes(q)) return false
+    if (
+      q &&
+      !r.name.toLowerCase().includes(q) &&
+      !(r.description ?? '').toLowerCase().includes(q) &&
+      !(r.topics ?? []).some((t) => t.includes(q))
+    )
+      return false
+    if (f.topic && !(r.topics ?? []).includes(f.topic)) return false
     if (f.language && (r.language ?? 'Sin lenguaje') !== f.language) return false
     if (f.visibility === 'public' && r.private) return false
     if (f.visibility === 'private' && !r.private) return false
@@ -69,6 +78,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
   )
+  const topics = useMemo(() => allTopics(repos), [repos])
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) => onFilters({ ...filters, [k]: v })
 
   const allVisibleChecked = visible.length > 0 && visible.every((r) => checked.has(r.id))
@@ -90,7 +100,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
           <Search size={18} aria-hidden="true" />
           <input
             type="search"
-            placeholder="Buscar por nombre o descripción"
+            placeholder="Buscar por nombre o etiqueta"
             value={filters.text}
             onChange={(e) => set('text', e.target.value)}
             aria-label="Buscar"
@@ -119,6 +129,17 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
               <option key={l}>{l}</option>
             ))}
           </select>
+          {(topics.length > 0 || filters.topic) && (
+            <select value={filters.topic} onChange={(e) => set('topic', e.target.value)} aria-label="Etiqueta">
+              <option value="">Todas las etiquetas</option>
+              {filters.topic && !topics.some(([t]) => t === filters.topic) && <option value={filters.topic}>{filters.topic}</option>}
+              {topics.map(([t, n]) => (
+                <option key={t} value={t}>
+                  {t} ({n})
+                </option>
+              ))}
+            </select>
+          )}
           <select
             value={filters.inactive}
             onChange={(e) => set('inactive', Number(e.target.value) as Filters['inactive'])}
@@ -215,6 +236,16 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
                 )}
               </span>
               <span className="repo-desc">{r.description || <i className="muted">Sin descripción</i>}</span>
+              {!!r.topics?.length && (
+                <span className="card-topics">
+                  {r.topics.slice(0, 4).map((t) => (
+                    <span key={t} className={`topic ${t === filters.topic ? 'active' : ''}`}>
+                      {t}
+                    </span>
+                  ))}
+                  {r.topics.length > 4 && <span className="topic more">+{r.topics.length - 4}</span>}
+                </span>
+              )}
               <span className="repo-meta">
                 <span className="lang">
                   <span className="dot" />
@@ -241,4 +272,11 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
       </ul>
     </>
   )
+}
+
+/** Etiquetas usadas en tus repos con cuántos repos usan cada una, de más a menos usada. */
+export function allTopics(repos: Repo[]): [string, number][] {
+  const count = new Map<string, number>()
+  for (const r of repos) for (const t of r.topics ?? []) count.set(t, (count.get(t) ?? 0) + 1)
+  return [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
 }

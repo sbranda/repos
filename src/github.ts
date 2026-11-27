@@ -21,6 +21,8 @@ export interface Repo {
   open_issues_count: number
   homepage: string | null
   has_pages: boolean
+  /** Etiquetas (topics). GitHub las manda en la lista; puede faltar en respuestas viejas. */
+  topics?: string[]
 }
 
 export interface User {
@@ -99,6 +101,8 @@ export interface RepoChanges {
   homepage?: string
   private?: boolean
   archived?: boolean
+  /** Se guardan aparte (PUT /topics), pero se editan junto con lo demás. */
+  topics?: string[]
 }
 
 export class GitHubError extends Error {
@@ -266,11 +270,21 @@ export class GitHub {
     return data
   }
 
-  updateRepo(repo: Repo, changes: RepoChanges) {
-    return this.request<Repo>(`/repos/${repo.full_name}`, {
-      method: 'PATCH',
-      body: JSON.stringify(changes),
-    }).then((r) => r.data)
+  async updateRepo(repo: Repo, changes: RepoChanges): Promise<Repo> {
+    const { topics, ...rest } = changes
+    let updated = repo
+    if (Object.keys(rest).length) {
+      updated = (await this.request<Repo>(`/repos/${repo.full_name}`, { method: 'PATCH', body: JSON.stringify(rest) })).data
+    }
+    if (topics) {
+      // Va después del PATCH porque si cambió el nombre, la dirección del repo también cambió.
+      const { data } = await this.request<{ names: string[] }>(`/repos/${updated.full_name}/topics`, {
+        method: 'PUT',
+        body: JSON.stringify({ names: topics }),
+      })
+      updated = { ...updated, topics: data.names }
+    }
+    return updated
   }
 }
 
