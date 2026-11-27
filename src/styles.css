@@ -923,6 +923,128 @@ p.error.banner {
   padding-top: 1.1rem;
 }
 
+/* ============ GitHub Pages ============ */
+.badge.site {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: transparent;
+}
+.pages-panel {
+  border-top: 1px solid var(--border);
+  padding: 0.4rem 0 0.9rem;
+}
+.pages-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pages-head h3 {
+  margin-top: 0.6rem;
+}
+.pages-card {
+  margin-top: 0.6rem;
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.7rem;
+}
+.pages-card.on {
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--green) 14%, transparent), transparent 60%),
+    var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--green) 30%, var(--border));
+}
+.pages-card.off {
+  background: var(--surface-2);
+  border: 1.5px dashed var(--border-strong);
+}
+.pages-card.off p {
+  margin: 0;
+}
+.pages-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.pill.ok {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: transparent;
+}
+.pill.running {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-color: transparent;
+}
+.pill.fail {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+.site-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  transition:
+    border-color 0.15s,
+    transform 0.15s var(--ease),
+    box-shadow 0.15s;
+}
+.site-link:hover {
+  border-color: var(--green);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.site-url {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.site-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--green);
+}
+.pages-form {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+.pages-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.pages-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
 /* ============ Barra de acciones en lote ============ */
 .batch-bar {
   position: fixed;

@@ -18,6 +18,7 @@ import {
 import { haceCuanto } from '../util'
 import { languageColor } from '../languages'
 import ConfirmDialog from './ConfirmDialog'
+import PagesPanel from './PagesPanel'
 
 interface Props {
   gh: GitHub
@@ -124,6 +125,13 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
           <CiStatus s={run} />
         </div>
       </div>
+
+      <PagesPanel
+        gh={gh}
+        repo={repo}
+        branches={branches.state === 'ok' ? branches.data.map((b) => b.name) : null}
+        onChanged={(has_pages) => onUpdated({ ...repo, has_pages })}
+      />
 
       <details open>
         <summary>

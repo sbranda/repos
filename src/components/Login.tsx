@@ -109,6 +109,9 @@ export default function Login({ onLogin, onInstall, online }: Props) {
                   <b>Administration</b>: Read and write (para renombrar, editar y archivar)
                 </li>
                 <li>
+                  <b>Pages</b>: Read and write (para ver y activar sitios)
+                </li>
+                <li>
                   <b>Actions</b>, <b>Issues</b> y <b>Pull requests</b>: Read-only
                 </li>
               </ul>

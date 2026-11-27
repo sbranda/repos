@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, Clock, GitFork, Lock, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, Clock, GitFork, Globe, Lock, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
 
@@ -10,6 +10,7 @@ export interface Filters {
   visibility: 'all' | 'public' | 'private'
   status: 'active' | 'archived' | 'all'
   forks: boolean
+  pages: 'all' | 'with' | 'without'
   inactive: 0 | 180 | 365 | 730
   sort: 'pushed' | 'name' | 'stars'
 }
@@ -20,6 +21,7 @@ export const DEFAULT_FILTERS: Filters = {
   visibility: 'all',
   status: 'active',
   forks: true,
+  pages: 'all',
   inactive: 0,
   sort: 'pushed',
 }
@@ -34,6 +36,8 @@ export function applyFilters(repos: Repo[], f: Filters): Repo[] {
     if (f.status === 'active' && r.archived) return false
     if (f.status === 'archived' && !r.archived) return false
     if (!f.forks && r.fork) return false
+    if (f.pages === 'with' && !r.has_pages) return false
+    if (f.pages === 'without' && r.has_pages) return false
     if (f.inactive && diasDesde(r.pushed_at) < f.inactive) return false
     return true
   })
@@ -101,6 +105,11 @@ export default function RepoList({ compact, repos, visible, loading, filters, on
             <option value="all">Públicos y privados</option>
             <option value="public">Solo públicos</option>
             <option value="private">Solo privados</option>
+          </select>
+          <select value={filters.pages} onChange={(e) => set('pages', e.target.value as Filters['pages'])} aria-label="Sitio web">
+            <option value="all">Con y sin sitio</option>
+            <option value="with">Con sitio (Pages)</option>
+            <option value="without">Sin sitio</option>
           </select>
           <select value={filters.language} onChange={(e) => set('language', e.target.value)} aria-label="Lenguaje">
             <option value="">Todos los lenguajes</option>
@@ -172,6 +181,11 @@ export default function RepoList({ compact, repos, visible, loading, filters, on
                 {r.private && (
                   <span className="badge private">
                     <Lock size={12} /> Privado
+                  </span>
+                )}
+                {r.has_pages && (
+                  <span className="badge site">
+                    <Globe size={12} /> Sitio
                   </span>
                 )}
                 {r.archived && (
