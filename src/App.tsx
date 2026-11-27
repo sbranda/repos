@@ -5,11 +5,15 @@ import Login from './components/Login'
 import RepoList, { applyFilters, DEFAULT_FILTERS, type Filters } from './components/RepoList'
 import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
+import Summary from './components/Summary'
 import { useInstallPrompt, useOnline } from './pwa'
 import Logo from './components/Logo'
-import { Download, LogOut, RefreshCw, WifiOff } from 'lucide-react'
+import { Download, LayoutDashboard, LayoutGrid, LogOut, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
+const VIEW_KEY = 'repos:view'
+
+type View = 'repos' | 'resumen'
 
 export default function App() {
   const [gh, setGh] = useState<GitHub | null>(null)
@@ -19,6 +23,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [view, setViewState] = useState<View>(() => (storage.get(VIEW_KEY) === 'resumen' ? 'resumen' : 'repos'))
+  const setView = useCallback((v: View) => {
+    setViewState(v)
+    storage.set(VIEW_KEY, v, true)
+  }, [])
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [booting, setBooting] = useState(true)
   const install = useInstallPrompt()
@@ -120,6 +129,33 @@ export default function App() {
       )}
       {error && <p className="error banner">{error}</p>}
 
+      <nav className="tabs" aria-label="Vistas">
+        <button className={view === 'repos' ? 'tab active' : 'tab'} aria-current={view === 'repos' ? 'page' : undefined} onClick={() => setView('repos')}>
+          <LayoutGrid size={16} /> Repos
+        </button>
+        <button
+          className={view === 'resumen' ? 'tab active' : 'tab'}
+          aria-current={view === 'resumen' ? 'page' : undefined}
+          onClick={() => setView('resumen')}
+        >
+          <LayoutDashboard size={16} /> Resumen
+        </button>
+      </nav>
+
+      {view === 'resumen' ? (
+        <div className="layout">
+          <Summary
+            gh={gh}
+            login={user.login}
+            repos={repos}
+            loading={loading}
+            onOpenRepo={(id) => {
+              setSelectedId(id)
+              setView('repos')
+            }}
+          />
+        </div>
+      ) : (
       <div className={`layout ${selected ? 'with-detail' : ''}`}>
         <section className="list-pane">
           <RepoList
@@ -148,8 +184,9 @@ export default function App() {
           </section>
         )}
       </div>
+      )}
 
-      {checkedRepos.length > 0 && (
+      {view === 'repos' && checkedRepos.length > 0 && (
         <BatchBar gh={gh} repos={checkedRepos} onUpdated={replaceRepo} onClear={() => setChecked(new Set())} />
       )}
     </div>
