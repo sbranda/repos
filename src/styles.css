@@ -615,6 +615,20 @@ p.error.banner {
   padding: 0 0.25rem;
   color: var(--muted);
   font-size: 0.92rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+}
+.freshness {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+.freshness.busy {
+  color: var(--primary);
 }
 .count {
   color: var(--text);

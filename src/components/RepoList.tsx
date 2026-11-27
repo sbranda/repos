@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, Clock, GitFork, Globe, Lock, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, Clock, GitFork, Globe, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
 
@@ -54,6 +54,8 @@ interface Props {
   repos: Repo[]
   visible: Repo[]
   loading: boolean
+  /** Cuándo se trajo la lista de GitHub por última vez (ms), o null si nunca. */
+  savedAt: number | null
   filters: Filters
   onFilters: (f: Filters) => void
   selectedId: number | null
@@ -62,7 +64,7 @@ interface Props {
   onChecked: (s: Set<number>) => void
 }
 
-export default function RepoList({ compact, repos, visible, loading, filters, onFilters, selectedId, onSelect, checked, onChecked }: Props) {
+export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked }: Props) {
   const languages = useMemo(
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
@@ -150,6 +152,19 @@ export default function RepoList({ compact, repos, visible, loading, filters, on
             </span>
           )}
         </label>
+        {repos.length > 0 && (
+          <span className={`freshness ${loading ? 'busy' : ''}`} role="status">
+            {loading ? (
+              <>
+                <RefreshCw size={13} className="spin" /> Actualizando…
+              </>
+            ) : savedAt ? (
+              <>
+                <Clock size={13} /> Actualizada {haceCuanto(new Date(savedAt).toISOString())}
+              </>
+            ) : null}
+          </span>
+        )}
       </div>
 
       <ul className={`repo-grid ${compact ? 'compact' : ''}`}>
