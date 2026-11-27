@@ -1212,6 +1212,138 @@ p.error.banner {
   padding: 0.3rem 0.6rem;
 }
 
+/* ============ Commits ============ */
+li.commit {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+}
+.commit-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.commit-avatar.placeholder {
+  background: var(--primary-soft);
+}
+.commit-body {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.commit-msg {
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.commit-msg:hover {
+  text-decoration: underline;
+}
+
+/* ============ README ============ */
+.readme-wrap {
+  position: relative;
+  margin-top: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 0.9rem 1rem;
+}
+.readme-wrap.collapsed .markdown {
+  max-height: 340px;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, #000 70%, transparent);
+}
+.readme-toggle {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+.markdown {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 1.1em 0 0.5em;
+  line-height: 1.25;
+}
+.markdown h1 {
+  font-size: 1.35rem;
+}
+.markdown h2 {
+  font-size: 1.15rem;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--border);
+}
+.markdown h3 {
+  font-size: 1rem;
+  display: block;
+}
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown pre,
+.markdown table,
+.markdown blockquote {
+  margin: 0 0 0.8em;
+}
+.markdown ul,
+.markdown ol {
+  padding-left: 1.4em;
+}
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+.markdown pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+.markdown blockquote {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 0.8em;
+  color: var(--muted);
+}
+.markdown table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--border);
+  padding: 0.35em 0.6em;
+}
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.markdown .anchor,
+.markdown .octicon {
+  display: none;
+}
+
 /* ============ GitHub Pages ============ */
 .badge.site {
   background: var(--green-soft);
