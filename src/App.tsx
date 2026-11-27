@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GitHub, GitHubError, type Repo, type User } from './github'
 import { storage } from './util'
+import { clearCache, loadCache, saveCache } from './cache'
 import Login from './components/Login'
 import RepoList, { applyFilters, DEFAULT_FILTERS, type Filters } from './components/RepoList'
 import RepoDetail from './components/RepoDetail'
@@ -30,6 +31,10 @@ export default function App() {
   }, [])
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [booting, setBooting] = useState(true)
+  // Cuándo se trajo la lista de GitHub por última vez (para "Actualizada hace…").
+  const [savedAt, setSavedAt] = useState<number | null>(null)
+  // La lista guardada vive donde vive el token: localStorage si eligió "Recordarlo".
+  const rememberRef = useRef(false)
   const install = useInstallPrompt()
   const online = useOnline()
 
@@ -37,12 +42,15 @@ export default function App() {
     const client = new GitHub(token)
     const me = await client.me()
     storage.set(TOKEN_KEY, token, remember)
+    rememberRef.current = remember
     setGh(client)
     setUser(me)
   }, [])
 
   const logout = useCallback(() => {
     storage.remove(TOKEN_KEY)
+    clearCache()
+    setSavedAt(null)
     setGh(null)
     setUser(null)
     setRepos([])
@@ -57,13 +65,30 @@ export default function App() {
       setBooting(false)
       return
     }
-    login(saved, !!localStorageHas(TOKEN_KEY))
+    const persist = localStorageHas(TOKEN_KEY)
+    const cached = loadCache()
+    if (cached) {
+      // Abrimos al instante con la última lista guardada; GitHub se consulta de fondo
+      // (reload corre solo apenas hay cliente) y si el token ya no sirve, salimos.
+      rememberRef.current = persist
+      const client = new GitHub(saved)
+      setGh(client)
+      setUser(cached.user)
+      setRepos(cached.repos)
+      setSavedAt(cached.savedAt || null)
+      setBooting(false)
+      client.me().then(setUser, (err) => {
+        if (err instanceof GitHubError && err.status === 401) logout()
+      })
+      return
+    }
+    login(saved, persist)
       // Solo olvidamos el token si GitHub lo rechaza, no si falta conexión.
       .catch((err) => {
         if (err instanceof GitHubError && err.status === 401) storage.remove(TOKEN_KEY)
       })
       .finally(() => setBooting(false))
-  }, [login])
+  }, [login, logout])
 
   const reload = useCallback(async () => {
     if (!gh) return
@@ -71,8 +96,11 @@ export default function App() {
     setError(null)
     try {
       setRepos(await gh.listRepos())
+      setSavedAt(Date.now())
     } catch (err) {
       if (err instanceof GitHubError && err.status === 401) logout()
+      // Sin conexión ya lo avisa el cartel de arriba; seguimos con la lista guardada.
+      else if (err instanceof GitHubError && err.status === 0 && !navigator.onLine) return
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
@@ -82,6 +110,11 @@ export default function App() {
   useEffect(() => {
     reload()
   }, [reload])
+
+  // Guardamos la lista cada vez que cambia (también después de editar o archivar).
+  useEffect(() => {
+    if (user && savedAt) saveCache(user, repos, savedAt, rememberRef.current)
+  }, [user, repos, savedAt])
 
   const replaceRepo = useCallback((updated: Repo) => {
     setRepos((list) => list.map((r) => (r.id === updated.id ? updated : r)))
@@ -124,7 +157,7 @@ export default function App() {
 
       {!online && (
         <p className="offline banner">
-          <WifiOff size={16} /> Sin conexión. Vas a poder ver y cambiar tus repos cuando vuelva internet.
+          <WifiOff size={16} /> Sin conexión. Estás viendo la última lista guardada; para cambiar algo hace falta internet.
         </p>
       )}
       {error && <p className="error banner">{error}</p>}
@@ -163,6 +196,7 @@ export default function App() {
             repos={repos}
             visible={visible}
             loading={loading}
+            savedAt={savedAt}
             filters={filters}
             onFilters={setFilters}
             selectedId={selectedId}

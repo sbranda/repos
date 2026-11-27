@@ -117,16 +117,22 @@ export class GitHub {
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<{ data: T; res: Response }> {
-    const res = await fetch(path.startsWith('http') ? path : API + path, {
-      ...init,
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${this.token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-        ...init.headers,
-      },
-    })
+    let res: Response
+    try {
+      res = await fetch(path.startsWith('http') ? path : API + path, {
+        ...init,
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${this.token}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+          ...init.headers,
+        },
+      })
+    } catch {
+      // fetch solo falla así cuando no hay red o GitHub no responde.
+      throw new GitHubError(0, 'Sin conexión: no se pudo hablar con GitHub.')
+    }
     if (!res.ok) {
       let message = res.statusText
       try {
