@@ -6,6 +6,8 @@ import RepoList, { applyFilters, DEFAULT_FILTERS, type Filters } from './compone
 import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
 import { useInstallPrompt, useOnline } from './pwa'
+import Logo from './components/Logo'
+import { Download, LogOut, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
 
@@ -80,34 +82,48 @@ export default function App() {
   const selected = repos.find((r) => r.id === selectedId) ?? null
   const checkedRepos = repos.filter((r) => checked.has(r.id))
 
-  if (booting) return <main className="login muted">Cargando…</main>
+  if (booting) return <div className="login-page"><main className="login muted">Cargando…</main></div>
   if (!gh || !user) return <Login onLogin={login} onInstall={install} online={online} />
 
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Mis repos</h1>
+        <div className="brand">
+          <Logo size={34} />
+          <h1>
+            Mis <span className="gradient-text">repos</span>
+          </h1>
+        </div>
         <div className="user">
-          <img src={user.avatar_url} alt="" width={28} height={28} />
-          <span>{user.login}</span>
           {install && (
             <button className="primary" onClick={install}>
-              Instalar app
+              <Download size={16} /> <span className="hide-sm">Instalar app</span>
             </button>
           )}
-          <button onClick={reload} disabled={loading || !online}>
-            {loading ? 'Actualizando…' : 'Actualizar'}
+          <button className="icon-btn" onClick={reload} disabled={loading || !online} title="Actualizar" aria-label="Actualizar">
+            <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
-          <button onClick={logout}>Salir</button>
+          <span className="user-chip">
+            <img src={user.avatar_url} alt="" width={28} height={28} />
+            <span className="hide-sm">{user.login}</span>
+          </span>
+          <button className="icon-btn" onClick={logout} title="Salir" aria-label="Salir">
+            <LogOut size={18} />
+          </button>
         </div>
       </header>
 
-      {!online && <p className="offline banner">Sin conexión. Vas a poder ver y cambiar tus repos cuando vuelva internet.</p>}
+      {!online && (
+        <p className="offline banner">
+          <WifiOff size={16} /> Sin conexión. Vas a poder ver y cambiar tus repos cuando vuelva internet.
+        </p>
+      )}
       {error && <p className="error banner">{error}</p>}
 
       <div className={`layout ${selected ? 'with-detail' : ''}`}>
         <section className="list-pane">
           <RepoList
+            compact={!!selected}
             repos={repos}
             visible={visible}
             loading={loading}

@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
+import { Archive, Clock, GitFork, Lock, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { diasDesde, haceCuanto } from '../util'
+import { languageColor } from '../languages'
 
 export interface Filters {
   text: string
@@ -44,6 +46,7 @@ export function applyFilters(repos: Repo[], f: Filters): Repo[] {
 }
 
 interface Props {
+  compact: boolean
   repos: Repo[]
   visible: Repo[]
   loading: boolean
@@ -55,7 +58,7 @@ interface Props {
   onChecked: (s: Set<number>) => void
 }
 
-export default function RepoList({ repos, visible, loading, filters, onFilters, selectedId, onSelect, checked, onChecked }: Props) {
+export default function RepoList({ compact, repos, visible, loading, filters, onFilters, selectedId, onSelect, checked, onChecked }: Props) {
   const languages = useMemo(
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
@@ -77,14 +80,18 @@ export default function RepoList({ repos, visible, loading, filters, onFilters, 
   return (
     <>
       <div className="filters">
-        <input
-          type="search"
-          placeholder="Buscar por nombre o descripción"
-          value={filters.text}
-          onChange={(e) => set('text', e.target.value)}
-          aria-label="Buscar"
-        />
+        <div className="search">
+          <Search size={18} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar por nombre o descripción"
+            value={filters.text}
+            onChange={(e) => set('text', e.target.value)}
+            aria-label="Buscar"
+          />
+        </div>
         <div className="filter-row">
+          <SlidersHorizontal size={16} className="muted" aria-hidden="true" />
           <select value={filters.status} onChange={(e) => set('status', e.target.value as Filters['status'])} aria-label="Estado">
             <option value="active">Activos</option>
             <option value="archived">Archivados</option>
@@ -116,7 +123,7 @@ export default function RepoList({ repos, visible, loading, filters, onFilters, 
             <option value="name">Nombre</option>
             <option value="stars">Estrellas</option>
           </select>
-          <label className="check">
+          <label className="check chip">
             <input type="checkbox" checked={filters.forks} onChange={(e) => set('forks', e.target.checked)} />
             Incluir forks
           </label>
@@ -126,36 +133,82 @@ export default function RepoList({ repos, visible, loading, filters, onFilters, 
       <div className="list-head">
         <label className="check">
           <input type="checkbox" checked={allVisibleChecked} onChange={toggleAll} disabled={!visible.length} />
-          {loading && !repos.length ? 'Cargando repos…' : `${visible.length} de ${repos.length} repos`}
+          {loading && !repos.length ? (
+            'Cargando repos…'
+          ) : (
+            <span>
+              <b className="count">{visible.length}</b> de {repos.length} repos
+            </span>
+          )}
         </label>
       </div>
 
-      <ul className="repo-list">
-        {visible.map((r) => (
-          <li key={r.id} className={r.id === selectedId ? 'selected' : ''}>
+      <ul className={`repo-grid ${compact ? 'compact' : ''}`}>
+        {loading &&
+          !repos.length &&
+          Array.from({ length: 6 }, (_, i) => (
+            <li key={i} className="repo-card skeleton" aria-hidden="true">
+              <span className="sk sk-title" />
+              <span className="sk sk-line" />
+              <span className="sk sk-line short" />
+            </li>
+          ))}
+        {visible.map((r, i) => (
+          <li
+            key={r.id}
+            className={`repo-card ${r.id === selectedId ? 'selected' : ''} ${checked.has(r.id) ? 'checked' : ''} ${r.archived ? 'is-archived' : ''}`}
+            style={{ '--lang': languageColor(r.language), '--i': Math.min(i, 12) } as React.CSSProperties}
+          >
             <input
               type="checkbox"
+              className="card-check"
               checked={checked.has(r.id)}
               onChange={() => toggle(r.id)}
               aria-label={`Seleccionar ${r.name}`}
             />
             <button className="repo-row" onClick={() => onSelect(r.id)}>
-              <span className="repo-name">
-                {r.name}
-                {r.private && <span className="badge">Privado</span>}
-                {r.archived && <span className="badge warn">Archivado</span>}
-                {r.fork && <span className="badge">Fork</span>}
+              <span className="repo-name">{r.name}</span>
+              <span className="badges">
+                {r.private && (
+                  <span className="badge private">
+                    <Lock size={12} /> Privado
+                  </span>
+                )}
+                {r.archived && (
+                  <span className="badge warn">
+                    <Archive size={12} /> Archivado
+                  </span>
+                )}
+                {r.fork && (
+                  <span className="badge">
+                    <GitFork size={12} /> Fork
+                  </span>
+                )}
               </span>
-              {r.description && <span className="repo-desc">{r.description}</span>}
+              <span className="repo-desc">{r.description || <i className="muted">Sin descripción</i>}</span>
               <span className="repo-meta">
-                {r.language && <span>{r.language}</span>}
-                <span>Push {haceCuanto(r.pushed_at)}</span>
-                {r.stargazers_count > 0 && <span>★ {r.stargazers_count}</span>}
+                <span className="lang">
+                  <span className="dot" />
+                  {r.language ?? 'Sin lenguaje'}
+                </span>
+                <span>
+                  <Clock size={13} /> {haceCuanto(r.pushed_at)}
+                </span>
+                {r.stargazers_count > 0 && (
+                  <span className="stars">
+                    <Star size={13} /> {r.stargazers_count}
+                  </span>
+                )}
               </span>
             </button>
           </li>
         ))}
-        {!loading && repos.length > 0 && visible.length === 0 && <li className="empty muted">Ningún repo coincide con los filtros.</li>}
+        {!loading && repos.length > 0 && visible.length === 0 && (
+          <li className="empty">
+            <Search size={28} />
+            <span>Ningún repo coincide con los filtros.</span>
+          </li>
+        )}
       </ul>
     </>
   )
