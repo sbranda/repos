@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import type { Branch, GitHub, Issue, PullRequest, Repo, RepoChanges, WorkflowRun } from '../github'
+import type { Commit, Branch, GitHub, Issue, PullRequest, Repo, RepoChanges, WorkflowRun } from '../github'
 import {
   Archive,
   ArchiveRestore,
   CircleCheck,
   CircleDot,
   CircleX,
+  BookOpen,
   ExternalLink,
+  GitCommitHorizontal,
   GitBranch,
   GitPullRequest,
   LoaderCircle,
@@ -19,6 +21,7 @@ import { haceCuanto } from '../util'
 import { languageColor } from '../languages'
 import ConfirmDialog from './ConfirmDialog'
 import PagesPanel from './PagesPanel'
+import Readme from './Readme'
 
 interface Props {
   gh: GitHub
@@ -52,6 +55,8 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
   const pulls = useSection<PullRequest[]>(() => gh.listPulls(repo), [key])
   const issues = useSection<Issue[]>(() => gh.listIssues(repo), [key])
   const run = useSection<WorkflowRun | null>(() => gh.latestRun(repo), [key])
+  const commits = useSection<Commit[]>(() => gh.listCommits(repo), [key])
+  const readme = useSection<string | null>(() => gh.getReadmeHtml(repo), [key])
 
   const [form, setForm] = useState(() => formFrom(repo))
   const [pending, setPending] = useState<{ title: string; changes: RepoChanges; danger?: boolean } | null>(null)
@@ -134,6 +139,44 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
       />
 
       <details open>
+        <summary>
+          <GitCommitHorizontal size={16} /> Últimos commits
+        </summary>
+        <SectionList
+          s={commits}
+          empty="Este repo todavía no tiene commits."
+          render={(c) => (
+            <li key={c.sha} className="commit">
+              {c.author ? (
+                <img className="commit-avatar" src={c.author.avatar_url} alt="" width={24} height={24} loading="lazy" />
+              ) : (
+                <span className="commit-avatar placeholder" aria-hidden="true" />
+              )}
+              <span className="commit-body">
+                <a href={c.html_url} target="_blank" rel="noreferrer" className="commit-msg">
+                  {c.commit.message.split('\n')[0]}
+                </a>
+                <span className="muted small">
+                  {c.author?.login ?? c.commit.author?.name ?? 'Desconocido'} · {haceCuanto(c.commit.author?.date ?? null)} ·{' '}
+                  <code>{c.sha.slice(0, 7)}</code>
+                </span>
+              </span>
+            </li>
+          )}
+        />
+      </details>
+
+      <details open>
+        <summary>
+          <BookOpen size={16} /> README
+        </summary>
+        {readme.state === 'loading' && <p className="muted small">Cargando…</p>}
+        {readme.state === 'error' && <p className="error small">{readme.message}</p>}
+        {readme.state === 'ok' &&
+          (readme.data ? <Readme html={readme.data} repo={repo} /> : <p className="muted small">Este repo no tiene README.</p>)}
+      </details>
+
+      <details>
         <summary>
           <GitPullRequest size={16} /> Pull requests abiertos
         </summary>

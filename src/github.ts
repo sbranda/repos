@@ -71,6 +71,13 @@ export interface PagesSite {
 /** Desde dónde publica GitHub Pages: una rama (y carpeta) o un workflow de GitHub Actions. */
 export type PagesSource = { type: 'workflow' } | { type: 'branch'; branch: string; path: '/' | '/docs' }
 
+export interface Commit {
+  sha: string
+  html_url: string
+  commit: { message: string; author: { name: string; date: string } | null }
+  author: { login: string; avatar_url: string } | null
+}
+
 export interface SearchItem {
   id: number
   number: number
@@ -133,7 +140,8 @@ export class GitHub {
       }
       throw new GitHubError(res.status, traducirError(res.status, message))
     }
-    const data = res.status === 204 ? (undefined as T) : ((await res.json()) as T)
+    const isJson = (res.headers.get('content-type') ?? '').includes('json')
+    const data = res.status === 204 ? (undefined as T) : ((isJson ? await res.json() : await res.text()) as T)
     return { data, res }
   }
 
@@ -220,6 +228,31 @@ export class GitHub {
     }
   }
 
+  /** README del repo ya convertido a HTML por GitHub, o null si no tiene. */
+  async getReadmeHtml(repo: Repo): Promise<string | null> {
+    try {
+      const { data } = await this.request<string>(`/repos/${repo.full_name}/readme`, {
+        headers: { Accept: 'application/vnd.github.html+json' },
+      })
+      return data
+    } catch (err) {
+      if (err instanceof GitHubError && err.status === 404) return null
+      throw contentsHint(err)
+    }
+  }
+
+  async listCommits(repo: Repo, perPage = 8): Promise<Commit[]> {
+    try {
+      const branch = encodeURIComponent(repo.default_branch)
+      const { data } = await this.request<Commit[]>(`/repos/${repo.full_name}/commits?sha=${branch}&per_page=${perPage}`)
+      return data
+    } catch (err) {
+      // Un repo vacío responde 409: lo tratamos como "sin commits".
+      if (err instanceof GitHubError && err.status === 409) return []
+      throw contentsHint(err)
+    }
+  }
+
   /** PRs o issues abiertos en todos los repos del usuario (búsqueda de GitHub). */
   async searchOpen(login: string, kind: 'pr' | 'issue', perPage = 8): Promise<SearchResult> {
     const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
@@ -242,6 +275,13 @@ function pagesBody(source: PagesSource) {
 }
 
 /** Los errores de permisos en Pages suelen ser por el token: lo aclaramos. */
+function contentsHint(err: unknown): unknown {
+  if (err instanceof GitHubError && err.status === 403) {
+    return new GitHubError(403, 'GitHub no dejó leer el contenido. Revisá que el token tenga el permiso "Contents: Read-only".')
+  }
+  return err
+}
+
 function pagesHint(err: unknown): unknown {
   if (err instanceof GitHubError && (err.status === 403 || err.status === 404)) {
     return new GitHubError(
