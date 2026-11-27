@@ -22,12 +22,18 @@ import { languageColor } from '../languages'
 import ConfirmDialog from './ConfirmDialog'
 import PagesPanel from './PagesPanel'
 import Readme from './Readme'
+import TopicsInput from './TopicsInput'
+import { sameTopics } from '../topics'
 
 interface Props {
   gh: GitHub
   repo: Repo
   onUpdated: (r: Repo) => void
   onClose: () => void
+  /** Todas las etiquetas que usás, para sugerirlas al editar. */
+  knownTopics: string[]
+  /** Al tocar una etiqueta, filtra la lista por ella. */
+  onTopic: (t: string) => void
 }
 
 type Section<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error'; message: string }
@@ -49,7 +55,7 @@ function useSection<T>(load: () => Promise<T>, deps: unknown[]): Section<T> {
   return s
 }
 
-export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
+export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, onTopic }: Props) {
   const key = repo.full_name
   const branches = useSection<Branch[]>(() => gh.listBranches(repo), [key])
   const pulls = useSection<PullRequest[]>(() => gh.listPulls(repo), [key])
@@ -107,6 +113,17 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
             </a>
           </h2>
           {repo.description && <p className="detail-desc">{repo.description}</p>}
+          {!!repo.topics?.length && (
+            <ul className="topic-list" aria-label="Etiquetas">
+              {repo.topics.map((t) => (
+                <li key={t}>
+                  <button type="button" className="topic" onClick={() => onTopic(t)} title={`Ver repos con la etiqueta ${t}`}>
+                    {t}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="muted small">
             Rama principal <code>{repo.default_branch}</code> · último push {haceCuanto(repo.pushed_at)}
           </p>
@@ -262,6 +279,10 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
               onChange={(e) => setForm({ ...form, homepage: e.target.value })}
             />
           </label>
+          <div className="field">
+            <span>Etiquetas</span>
+            <TopicsInput value={form.topics} onChange={(topics) => setForm({ ...form, topics })} known={knownTopics} />
+          </div>
           <label>
             Visibilidad
             <select
@@ -315,7 +336,7 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
 }
 
 function formFrom(r: Repo) {
-  return { name: r.name, description: r.description ?? '', homepage: r.homepage ?? '', private: r.private }
+  return { name: r.name, description: r.description ?? '', homepage: r.homepage ?? '', private: r.private, topics: r.topics ?? [] }
 }
 
 function diff(r: Repo, f: ReturnType<typeof formFrom>): RepoChanges {
@@ -324,6 +345,7 @@ function diff(r: Repo, f: ReturnType<typeof formFrom>): RepoChanges {
   if (f.description !== (r.description ?? '')) c.description = f.description
   if (f.homepage !== (r.homepage ?? '')) c.homepage = f.homepage
   if (f.private !== r.private) c.private = f.private
+  if (!sameTopics(f.topics, r.topics ?? [])) c.topics = f.topics
   return c
 }
 
@@ -346,10 +368,34 @@ function ChangeSummary({ repo, changes }: { repo: Repo; changes: RepoChanges }) 
             : ' Cualquiera va a poder ver el código y todo su historial.'}
         </li>
       )}
+      {changes.topics !== undefined && <TopicsChange before={repo.topics ?? []} after={changes.topics} />}
       {changes.archived === true && <li>El repo queda de solo lectura. Se puede desarchivar cuando quieras.</li>}
       {changes.archived === false && <li>El repo vuelve a aceptar cambios.</li>}
     </ul>
   )
+}
+
+function TopicsChange({ before, after }: { before: string[]; after: string[] }) {
+  const added = after.filter((t) => !before.includes(t))
+  const removed = before.filter((t) => !after.includes(t))
+  return (
+    <li>
+      Etiquetas:
+      {added.length > 0 && <> agregar {codes(added)}</>}
+      {added.length > 0 && removed.length > 0 && ';'}
+      {removed.length > 0 && <> quitar {codes(removed)}</>}
+      {!added.length && !removed.length && ' cambiar el orden'}.
+    </li>
+  )
+}
+
+function codes(list: string[]) {
+  return list.map((t, i) => (
+    <span key={t}>
+      {i > 0 && ' '}
+      <code>{t}</code>
+    </span>
+  ))
 }
 
 function Stat<T>({

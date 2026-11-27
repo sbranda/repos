@@ -34,6 +34,7 @@ function slim(r: Repo): Repo {
     open_issues_count: r.open_issues_count,
     homepage: r.homepage,
     has_pages: r.has_pages,
+    topics: r.topics ?? [],
   }
 }
 
