@@ -1,8 +1,16 @@
 import { useState } from 'react'
 import type { GitHub, Repo, RepoChanges } from '../github'
+import { Archive, ArchiveRestore, Eye, EyeOff, X } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 
 type Action = 'archive' | 'unarchive' | 'private' | 'public'
+
+const ICONS: Record<Action, React.ReactNode> = {
+  archive: <Archive size={16} />,
+  unarchive: <ArchiveRestore size={16} />,
+  private: <EyeOff size={16} />,
+  public: <Eye size={16} />,
+}
 
 const ACTIONS: Record<Action, { label: string; verb: string; changes: RepoChanges; applies: (r: Repo) => boolean; danger?: boolean }> = {
   archive: { label: 'Archivar', verb: 'archivar', changes: { archived: true }, applies: (r) => !r.archived, danger: true },
@@ -59,15 +67,17 @@ export default function BatchBar({ gh, repos, onUpdated, onClear }: Props) {
   return (
     <div className="batch-bar">
       <span>
-        <b>{repos.length}</b> seleccionado{repos.length === 1 ? '' : 's'}
+        <b className="count-pill">{repos.length}</b> seleccionado{repos.length === 1 ? '' : 's'}
       </span>
       <div className="row">
         {(Object.keys(ACTIONS) as Action[]).map((a) => (
-          <button key={a} onClick={() => { setResults(null); setAction(a) }} disabled={!repos.some(ACTIONS[a].applies)}>
-            {ACTIONS[a].label}
+          <button key={a} aria-label={ACTIONS[a].label} title={ACTIONS[a].label} onClick={() => { setResults(null); setAction(a) }} disabled={!repos.some(ACTIONS[a].applies)}>
+            {ICONS[a]} <span className="hide-sm">{ACTIONS[a].label}</span>
           </button>
         ))}
-        <button onClick={onClear}>Quitar selección</button>
+        <button onClick={onClear} className="icon-btn" aria-label="Quitar selección" title="Quitar selección">
+          <X size={16} />
+        </button>
       </div>
 
       {results && (

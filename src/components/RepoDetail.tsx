@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react'
 import type { Branch, GitHub, Issue, PullRequest, Repo, RepoChanges, WorkflowRun } from '../github'
+import {
+  Archive,
+  ArchiveRestore,
+  CircleCheck,
+  CircleDot,
+  CircleX,
+  ExternalLink,
+  GitBranch,
+  GitPullRequest,
+  LoaderCircle,
+  Lock,
+  Pencil,
+  Zap,
+  X,
+} from 'lucide-react'
 import { haceCuanto } from '../util'
+import { languageColor } from '../languages'
 import ConfirmDialog from './ConfirmDialog'
 
 interface Props {
@@ -63,37 +79,56 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
   }
 
   return (
-    <div className="detail">
-      <div className="detail-head">
+    <div className="detail" style={{ '--lang': languageColor(repo.language) } as React.CSSProperties}>
+      <div className="detail-hero">
         <div>
+          <p className="eyebrow">
+            <span className="dot" /> {repo.language ?? 'Sin lenguaje'}
+            {repo.private && (
+              <span className="badge private">
+                <Lock size={12} /> Privado
+              </span>
+            )}
+            {repo.archived && (
+              <span className="badge warn">
+                <Archive size={12} /> Archivado
+              </span>
+            )}
+          </p>
           <h2>
             <a href={repo.html_url} target="_blank" rel="noreferrer">
-              {repo.full_name}
+              {repo.name} <ExternalLink size={16} />
             </a>
           </h2>
+          {repo.description && <p className="detail-desc">{repo.description}</p>}
           <p className="muted small">
             Rama principal <code>{repo.default_branch}</code> · último push {haceCuanto(repo.pushed_at)}
           </p>
         </div>
-        <button onClick={onClose} aria-label="Cerrar detalle">
-          ✕
+        <button className="icon-btn" onClick={onClose} aria-label="Cerrar detalle">
+          <X size={18} />
         </button>
       </div>
 
       {message && <p className={message.kind === 'ok' ? 'success' : 'error'}>{message.text}</p>}
 
       <div className="stats">
-        <Stat label="Ramas" s={branches} count={(d) => d.length} />
-        <Stat label="PRs abiertos" s={pulls} count={(d) => d.length} />
-        <Stat label="Issues abiertos" s={issues} count={(d) => d.length} />
-        <div className="stat">
+        <Stat label="Ramas" tone="violet" icon={<GitBranch size={18} />} s={branches} count={(d) => d.length} />
+        <Stat label="PRs abiertos" tone="blue" icon={<GitPullRequest size={18} />} s={pulls} count={(d) => d.length} />
+        <Stat label="Issues abiertos" tone="pink" icon={<CircleDot size={18} />} s={issues} count={(d) => d.length} />
+        <div className="stat tone-green">
+          <span className="stat-icon">
+            <Zap size={18} />
+          </span>
           <span className="stat-label">Último CI</span>
           <CiStatus s={run} />
         </div>
       </div>
 
       <details open>
-        <summary>Pull requests abiertos</summary>
+        <summary>
+          <GitPullRequest size={16} /> Pull requests abiertos
+        </summary>
         <SectionList
           s={pulls}
           empty="No hay PRs abiertos."
@@ -113,7 +148,9 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
       </details>
 
       <details>
-        <summary>Issues abiertos</summary>
+        <summary>
+          <CircleDot size={16} /> Issues abiertos
+        </summary>
         <SectionList
           s={issues}
           empty="No hay issues abiertos."
@@ -128,7 +165,9 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
       </details>
 
       <details>
-        <summary>Ramas</summary>
+        <summary>
+          <GitBranch size={16} /> Ramas
+        </summary>
         <SectionList
           s={branches}
           empty="Sin ramas."
@@ -142,7 +181,9 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
         />
       </details>
 
-      <h3>Editar</h3>
+      <h3>
+        <Pencil size={16} /> Editar
+      </h3>
       {repo.archived ? (
         <p className="muted">Este repo está archivado y es de solo lectura. Desarchivalo para poder editarlo.</p>
       ) : (
@@ -194,14 +235,14 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose }: Props) {
       <div className="row archive-row">
         {repo.archived ? (
           <button onClick={() => setPending({ title: `Desarchivar ${repo.name}`, changes: { archived: false } })}>
-            Desarchivar
+            <ArchiveRestore size={16} /> Desarchivar
           </button>
         ) : (
           <button
             className="danger-outline"
             onClick={() => setPending({ title: `Archivar ${repo.name}`, changes: { archived: true }, danger: true })}
           >
-            Archivar
+            <Archive size={16} /> Archivar
           </button>
         )}
       </div>
@@ -260,9 +301,22 @@ function ChangeSummary({ repo, changes }: { repo: Repo; changes: RepoChanges }) 
   )
 }
 
-function Stat<T>({ label, s, count }: { label: string; s: Section<T>; count: (d: T) => number }) {
+function Stat<T>({
+  label,
+  s,
+  count,
+  icon,
+  tone,
+}: {
+  label: string
+  s: Section<T>
+  count: (d: T) => number
+  icon: React.ReactNode
+  tone: string
+}) {
   return (
-    <div className="stat">
+    <div className={`stat tone-${tone}`}>
+      <span className="stat-icon">{icon}</span>
       <span className="stat-label">{label}</span>
       <span className="stat-value">{s.state === 'ok' ? count(s.data) : s.state === 'loading' ? '…' : '—'}</span>
     </div>
@@ -274,18 +328,13 @@ function CiStatus({ s }: { s: Section<WorkflowRun | null> }) {
   if (s.state === 'error') return <span className="stat-value" title={s.message}>—</span>
   const r = s.data
   if (!r) return <span className="stat-value muted small">Sin CI</span>
-  const label =
-    r.status !== 'completed'
-      ? 'En curso'
-      : r.conclusion === 'success'
-        ? 'Pasó'
-        : r.conclusion === 'failure'
-          ? 'Falló'
-          : (r.conclusion ?? '—')
-  const cls = r.conclusion === 'success' ? 'ok' : r.conclusion === 'failure' ? 'fail' : ''
+  const running = r.status !== 'completed'
+  const label = running ? 'En curso' : r.conclusion === 'success' ? 'Pasó' : r.conclusion === 'failure' ? 'Falló' : (r.conclusion ?? '—')
+  const cls = running ? 'running' : r.conclusion === 'success' ? 'ok' : r.conclusion === 'failure' ? 'fail' : ''
+  const Icon = running ? LoaderCircle : r.conclusion === 'success' ? CircleCheck : r.conclusion === 'failure' ? CircleX : null
   return (
     <a className={`stat-value ci ${cls}`} href={r.html_url} target="_blank" rel="noreferrer" title={r.name ?? ''}>
-      {label}
+      {Icon && <Icon size={18} className={running ? 'spin' : ''} />} {label}
     </a>
   )
 }
