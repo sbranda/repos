@@ -6,6 +6,7 @@ App web para administrar mis repositorios de GitHub desde un solo lugar. Se publ
 
 - Lista todos tus repos (públicos y privados) con buscador y filtros por estado, visibilidad, lenguaje, antigüedad del último push y forks.
 - Muestra el detalle de cada repo: ramas, PRs abiertos, issues abiertos y el resultado del último CI de la rama principal.
+- Pestaña **Resumen**: totales, repos por lenguaje, antigüedad del último cambio, repos inactivos hace más de un año, y tus PRs e issues abiertos en todos los repos.
 - Muestra si cada repo tiene sitio en GitHub Pages, con link directo, y permite activarlo, cambiar desde qué rama o carpeta se publica, o desactivarlo.
 - Permite renombrar, cambiar la descripción, el sitio web y la visibilidad, y archivar o desarchivar.
 - Acciones en lote sobre varios repos a la vez: archivar, desarchivar, hacer privados o públicos.

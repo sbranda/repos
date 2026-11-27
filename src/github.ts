@@ -71,6 +71,21 @@ export interface PagesSite {
 /** Desde dónde publica GitHub Pages: una rama (y carpeta) o un workflow de GitHub Actions. */
 export type PagesSource = { type: 'workflow' } | { type: 'branch'; branch: string; path: '/' | '/docs' }
 
+export interface SearchItem {
+  id: number
+  number: number
+  title: string
+  html_url: string
+  repository_url: string
+  updated_at: string
+  draft?: boolean
+}
+
+export interface SearchResult {
+  total_count: number
+  items: SearchItem[]
+}
+
 export interface RepoChanges {
   name?: string
   description?: string
@@ -203,6 +218,13 @@ export class GitHub {
     } catch (err) {
       throw pagesHint(err)
     }
+  }
+
+  /** PRs o issues abiertos en todos los repos del usuario (búsqueda de GitHub). */
+  async searchOpen(login: string, kind: 'pr' | 'issue', perPage = 8): Promise<SearchResult> {
+    const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
+    const { data } = await this.request<SearchResult>(`/search/issues?q=${q}&sort=updated&order=desc&per_page=${perPage}`)
+    return data
   }
 
   updateRepo(repo: Repo, changes: RepoChanges) {
