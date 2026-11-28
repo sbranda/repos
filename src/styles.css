@@ -2325,3 +2325,46 @@ button.repo-link,
 .security > p.error {
   margin-top: 0;
 }
+
+/* Favoritos: chinche debajo de la casilla de selección; los fijados van arriba */
+.fav-btn {
+  position: absolute;
+  top: calc(0.75rem + 28px);
+  right: calc(0.75rem - 2px);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+.fav-btn:hover,
+.fav-btn:focus-visible {
+  opacity: 1;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.fav-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.fav-btn.on {
+  opacity: 1;
+  color: var(--primary);
+}
+.fav-btn.on svg {
+  fill: currentColor;
+  transform: rotate(-30deg);
+}
+.repo-card.fav {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+}
