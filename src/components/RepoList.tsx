@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, Clock, GitFork, Globe, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, Clock, Download, GitFork, Globe, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
+import { download, fileName, reposCsv } from '../csv'
 
 export interface Filters {
   text: string
@@ -185,6 +186,15 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
               </>
             ) : null}
           </span>
+        )}
+        {visible.length > 0 && (
+          <button
+            className="small-btn"
+            onClick={() => download(fileName('repos', repos[0]?.owner.login ?? 'github'), reposCsv(visible))}
+            title="Descargar los repos que se ven, con los filtros aplicados"
+          >
+            <Download size={14} /> Exportar CSV
+          </button>
         )}
       </div>
 

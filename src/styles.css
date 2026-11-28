@@ -2072,3 +2072,24 @@ p.cleanup {
 .cleanup button.link {
   margin-left: 0;
 }
+
+/* ============ Exportar ============ */
+button.small-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  border-radius: 999px;
+}
+.list-head .small-btn {
+  margin-left: auto;
+}
+.list-head .freshness + .small-btn {
+  margin-left: 0;
+}
+.inbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.list-head .freshness {
+  margin-left: auto;
+}
