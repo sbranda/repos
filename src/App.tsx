@@ -11,6 +11,8 @@ import Inbox from './components/Inbox'
 import { useInstallPrompt, useOnline } from './pwa'
 import Logo from './components/Logo'
 import NewRepoDialog from './components/NewRepoDialog'
+import ThemeToggle from './components/ThemeToggle'
+import { useTheme } from './theme'
 import { Download, Inbox as InboxIcon, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
@@ -27,6 +29,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [theme, setTheme] = useTheme()
   const [view, setViewState] = useState<View>(() => {
     const saved = storage.get(VIEW_KEY) as View | null
     return saved && VIEWS.includes(saved) ? saved : 'repos'
@@ -159,6 +162,7 @@ export default function App() {
           <button className="primary" onClick={() => setCreating(true)} disabled={!online} title="Crear un repo nuevo">
             <Plus size={16} /> <span className="hide-sm">Nuevo repo</span>
           </button>
+          <ThemeToggle theme={theme} onChange={setTheme} />
           <button className="icon-btn" onClick={reload} disabled={loading || !online} title="Actualizar" aria-label="Actualizar">
             <RefreshCw size={18} className={loading ? 'spin' : ''} />
           </button>
