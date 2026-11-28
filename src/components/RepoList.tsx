@@ -128,7 +128,9 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             value={filters.text}
             onChange={(e) => set('text', e.target.value)}
             aria-label="Buscar"
+            aria-keyshortcuts="/"
           />
+          <kbd className="search-kbd" aria-hidden="true" title="Atajos: / para buscar, flechas para moverte por la lista">/</kbd>
         </div>
         <div className="filter-row">
           <SlidersHorizontal size={16} className="muted" aria-hidden="true" />

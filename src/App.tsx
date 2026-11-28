@@ -16,6 +16,7 @@ import ThemeToggle from './components/ThemeToggle'
 import { useTheme } from './theme'
 import { clearCi, useCiStatuses } from './ci'
 import { useFavorites } from './favorites'
+import { useKeyboardShortcuts } from './shortcuts'
 import { Download, Inbox as InboxIcon, ShieldAlert, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
@@ -137,6 +138,7 @@ export default function App() {
   const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
   const { ci, pending: ciPending } = useCiStatuses(gh, repos, savedAt, online, loading)
   const { favs, toggleFav } = useFavorites()
+  useKeyboardShortcuts(!!user)
   const visible = useMemo(() => applyFilters(repos, filters, ci, favs), [repos, filters, ci, favs])
   const selected = repos.find((r) => r.id === selectedId) ?? null
 
