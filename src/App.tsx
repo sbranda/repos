@@ -15,6 +15,7 @@ import NewRepoDialog from './components/NewRepoDialog'
 import ThemeToggle from './components/ThemeToggle'
 import { useTheme } from './theme'
 import { clearCi, useCiStatuses } from './ci'
+import { useFavorites } from './favorites'
 import { Download, Inbox as InboxIcon, ShieldAlert, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
@@ -135,7 +136,8 @@ export default function App() {
 
   const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
   const { ci, pending: ciPending } = useCiStatuses(gh, repos, savedAt, online, loading)
-  const visible = useMemo(() => applyFilters(repos, filters, ci), [repos, filters, ci])
+  const { favs, toggleFav } = useFavorites()
+  const visible = useMemo(() => applyFilters(repos, filters, ci, favs), [repos, filters, ci, favs])
   const selected = repos.find((r) => r.id === selectedId) ?? null
 
   // Al cerrar el detalle, el foco vuelve al repo que estaba abierto (si no, queda perdido).
@@ -270,6 +272,8 @@ export default function App() {
             onChecked={setChecked}
             ci={ci}
             ciPending={ciPending}
+            favs={favs}
+            onToggleFav={toggleFav}
           />
         </section>
 

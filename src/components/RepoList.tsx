@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, CircleCheck, CircleX, Clock, Download, GitFork, Globe, LoaderCircle, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, CircleCheck, CircleX, Clock, Download, GitFork, Globe, LoaderCircle, Lock, Pin, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { CI_LABEL, type CiMap } from '../ci'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
@@ -18,6 +18,8 @@ export interface Filters {
   /** Estado de la última ejecución de GitHub Actions. */
   ci: 'all' | 'fail' | 'ok' | 'running' | 'none'
   sort: 'pushed' | 'name' | 'stars'
+  /** Mostrar solo los favoritos. */
+  onlyFavs: boolean
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -31,9 +33,11 @@ export const DEFAULT_FILTERS: Filters = {
   inactive: 0,
   ci: 'all',
   sort: 'pushed',
+  onlyFavs: false,
 }
 
-export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}): Repo[] {
+/** Filtra y ordena. Los favoritos siempre van primero, cada grupo con el orden elegido. */
+export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}, favs: Set<number> = new Set()): Repo[] {
   const q = f.text.trim().toLowerCase()
   const out = repos.filter((r) => {
     if (
@@ -43,6 +47,7 @@ export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}): Repo[] 
       !(r.topics ?? []).some((t) => t.includes(q))
     )
       return false
+    if (f.onlyFavs && !favs.has(r.id)) return false
     if (f.topic && !(r.topics ?? []).includes(f.topic)) return false
     if (f.language && (r.language ?? 'Sin lenguaje') !== f.language) return false
     if (f.visibility === 'public' && r.private) return false
@@ -60,6 +65,9 @@ export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}): Repo[] 
     return true
   })
   out.sort((a, b) => {
+    const fa = favs.has(a.id) ? 0 : 1
+    const fb = favs.has(b.id) ? 0 : 1
+    if (fa !== fb) return fa - fb
     if (f.sort === 'name') return a.name.localeCompare(b.name)
     if (f.sort === 'stars') return b.stargazers_count - a.stargazers_count
     return (b.pushed_at ?? '').localeCompare(a.pushed_at ?? '')
@@ -84,9 +92,12 @@ interface Props {
   ci: CiMap
   /** Cuántos repos faltan consultar. */
   ciPending: number
+  /** Repos marcados como favoritos. */
+  favs: Set<number>
+  onToggleFav: (id: number) => void
 }
 
-export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked, ci, ciPending }: Props) {
+export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked, ci, ciPending, favs, onToggleFav }: Props) {
   const languages = useMemo(
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
@@ -181,6 +192,12 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             <input type="checkbox" checked={filters.forks} onChange={(e) => set('forks', e.target.checked)} />
             Incluir forks
           </label>
+          {(favs.size > 0 || filters.onlyFavs) && (
+            <label className="check chip">
+              <input type="checkbox" checked={filters.onlyFavs} onChange={(e) => set('onlyFavs', e.target.checked)} />
+              Solo favoritos
+            </label>
+          )}
         </div>
       </div>
 
@@ -241,7 +258,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
         {visible.map((r, i) => (
           <li
             key={r.id}
-            className={`repo-card ${r.id === selectedId ? 'selected' : ''} ${checked.has(r.id) ? 'checked' : ''} ${r.archived ? 'is-archived' : ''}`}
+            className={`repo-card ${favs.has(r.id) ? 'fav' : ''} ${r.id === selectedId ? 'selected' : ''} ${checked.has(r.id) ? 'checked' : ''} ${r.archived ? 'is-archived' : ''}`}
             style={{ '--lang': languageColor(r.language), '--i': Math.min(i, 12) } as React.CSSProperties}
           >
             <input
@@ -251,6 +268,15 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
               onChange={() => toggle(r.id)}
               aria-label={`Seleccionar ${r.name}`}
             />
+            <button
+              className={`fav-btn ${favs.has(r.id) ? 'on' : ''}`}
+              onClick={() => onToggleFav(r.id)}
+              aria-pressed={favs.has(r.id)}
+              aria-label={`Favorito: ${r.name}`}
+              title={favs.has(r.id) ? 'Quitar de favoritos' : 'Fijar arriba como favorito'}
+            >
+              <Pin size={16} aria-hidden="true" />
+            </button>
             <button
               className="repo-row"
               data-repo-id={r.id}
