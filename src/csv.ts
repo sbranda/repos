@@ -1,0 +1,102 @@
+// Armado y descarga de CSV. Usamos ";" como separador y BOM UTF-8: así Excel en español
+// lo abre en columnas y con tildes bien, y Google Sheets / Numbers lo detectan solos.
+
+import type { Repo, SearchItem } from './github'
+
+const SEP = ';'
+
+type Cell = string | number | boolean | null | undefined
+
+function cell(v: Cell): string {
+  if (v === null || v === undefined) return ''
+  let s = typeof v === 'boolean' ? (v ? 'sí' : 'no') : String(v)
+  // Evita que una planilla tome como fórmula un texto que empieza con = + - @ (inyección CSV).
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+  return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+export function toCsv(headers: string[], rows: Cell[][]): string {
+  return [headers, ...rows].map((r) => r.map(cell).join(SEP)).join('\r\n') + '\r\n'
+}
+
+/** Fecha local legible por planillas: "2026-11-28 14:05". */
+export function fecha(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
+export function download(filename: string, csv: string) {
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+export function fileName(kind: string, login: string): string {
+  return `${kind}-${login}-${fecha(new Date().toISOString()).slice(0, 10)}.csv`
+}
+
+export function reposCsv(repos: Repo[]): string {
+  return toCsv(
+    [
+      'Nombre',
+      'Descripción',
+      'Visibilidad',
+      'Archivado',
+      'Fork',
+      'Lenguaje',
+      'Etiquetas',
+      'Estrellas',
+      'Issues y PRs abiertos',
+      'Sitio (Pages)',
+      'Sitio web',
+      'Rama principal',
+      'Último push',
+      'Última actualización',
+      'URL',
+    ],
+    repos.map((r) => [
+      r.name,
+      r.description,
+      r.private ? 'privado' : 'público',
+      r.archived,
+      r.fork,
+      r.language,
+      (r.topics ?? []).join(', '),
+      r.stargazers_count,
+      r.open_issues_count,
+      r.has_pages,
+      r.homepage,
+      r.default_branch,
+      fecha(r.pushed_at),
+      fecha(r.updated_at),
+      r.html_url,
+    ]),
+  )
+}
+
+export function pendientesCsv(items: (SearchItem & { kind: 'pr' | 'issue'; repoName: string })[]): string {
+  return toCsv(
+    ['Tipo', 'Repo', 'Número', 'Título', 'Borrador', 'Autor', 'Etiquetas', 'Comentarios', 'Creado', 'Última actividad', 'URL'],
+    items.map((i) => [
+      i.kind === 'pr' ? 'PR' : 'Issue',
+      i.repoName,
+      i.number,
+      i.title,
+      i.kind === 'pr' ? !!i.draft : '',
+      i.user?.login,
+      (i.labels ?? []).map((l) => l.name).join(', '),
+      i.comments ?? 0,
+      fecha(i.created_at),
+      fecha(i.updated_at),
+      i.html_url,
+    ]),
+  )
+}

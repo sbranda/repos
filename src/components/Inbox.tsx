@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleDot, ExternalLink, GitPullRequest, GitPullRequestDraft, Inbox as InboxIcon, MessageSquare, RefreshCw, Search } from 'lucide-react'
+import { CircleDot, Download, ExternalLink, GitPullRequest, GitPullRequestDraft, Inbox as InboxIcon, MessageSquare, RefreshCw, Search } from 'lucide-react'
 import type { GitHub, Repo, SearchItem } from '../github'
 import { haceCuanto } from '../util'
+import { download, fileName, pendientesCsv } from '../csv'
 
 interface Props {
   gh: GitHub
@@ -101,9 +102,19 @@ export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
             <CircleDot size={15} /> Issues <span className="seg-count">{counts.issue}</span>
           </button>
         </div>
-        <button className="icon-btn" onClick={fetchAll} disabled={refreshing || !online} title="Actualizar" aria-label="Actualizar pendientes">
-          <RefreshCw size={18} className={refreshing ? 'spin' : ''} />
-        </button>
+        <div className="inbox-actions">
+          {visible.length > 0 && (
+            <button className="small-btn" onClick={() => download(fileName('pendientes', login), pendientesCsv(visible))} title="Descargar lo que se ve, con los filtros aplicados">
+              <Download size={14} />
+              <span>
+                <span className="hide-sm">Exportar </span>CSV
+              </span>
+            </button>
+          )}
+          <button className="icon-btn" onClick={fetchAll} disabled={refreshing || !online} title="Actualizar" aria-label="Actualizar pendientes">
+            <RefreshCw size={18} className={refreshing ? 'spin' : ''} />
+          </button>
+        </div>
       </div>
 
       <div className="filters inbox-filters">
