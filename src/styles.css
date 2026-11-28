@@ -49,48 +49,47 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c0a17;
-    --bg-2: #120f24;
-    --surface: #171428;
-    --surface-2: #1d1933;
-    --text: #ecebf7;
-    --muted: #a19dbd;
-    --border: #2a2545;
-    --border-strong: #3a3360;
-    --primary: #8b5cf6;
-    --primary-2: #3b82f6;
-    --primary-soft: #2a1f4d;
-    --on-primary: #ffffff;
-    --grad: linear-gradient(135deg, #7c3aed 0%, #6d28d9 45%, #2563eb 100%);
-    --grad-text: linear-gradient(90deg, #c4b5fd, #93c5fd 60%, #f9a8d4);
-    --danger: #ff7a93;
-    --danger-soft: #3d1724;
-    --ok: #4ade9b;
-    --ok-soft: #12321f;
-    --warn-bg: #3b2d0c;
-    --warn-text: #fcd679;
-    --violet: #c4b5fd;
-    --violet-soft: #2a1f4d;
-    --blue: #93c5fd;
-    --blue-soft: #172a4d;
-    --pink: #f9a8d4;
-    --pink-soft: #3d1830;
-    --green: #6ee7b0;
-    --green-soft: #12321f;
-    --amber: #fbbf5a;
-    --amber-soft: #3a2a0c;
-    --age-1: #3b2f6b;
-    --age-2: #5b3fb0;
-    --age-3: #8b5cf6;
-    --age-4: #c4b5fd;
-    --bar: #a78bfa;
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow: 0 8px 24px -8px rgb(0 0 0 / 0.6);
-    --shadow-lg: 0 24px 60px -12px rgb(0 0 0 / 0.7);
-    color-scheme: dark;
-  }
+/* Modo oscuro: lo activa data-theme en <html> (según el sistema o elegido a mano). */
+:root[data-theme='dark'] {
+  --bg: #0c0a17;
+  --bg-2: #120f24;
+  --surface: #171428;
+  --surface-2: #1d1933;
+  --text: #ecebf7;
+  --muted: #a19dbd;
+  --border: #2a2545;
+  --border-strong: #3a3360;
+  --primary: #8b5cf6;
+  --primary-2: #3b82f6;
+  --primary-soft: #2a1f4d;
+  --on-primary: #ffffff;
+  --grad: linear-gradient(135deg, #7c3aed 0%, #6d28d9 45%, #2563eb 100%);
+  --grad-text: linear-gradient(90deg, #c4b5fd, #93c5fd 60%, #f9a8d4);
+  --danger: #ff7a93;
+  --danger-soft: #3d1724;
+  --ok: #4ade9b;
+  --ok-soft: #12321f;
+  --warn-bg: #3b2d0c;
+  --warn-text: #fcd679;
+  --violet: #c4b5fd;
+  --violet-soft: #2a1f4d;
+  --blue: #93c5fd;
+  --blue-soft: #172a4d;
+  --pink: #f9a8d4;
+  --pink-soft: #3d1830;
+  --green: #6ee7b0;
+  --green-soft: #12321f;
+  --amber: #fbbf5a;
+  --amber-soft: #3a2a0c;
+  --age-1: #3b2f6b;
+  --age-2: #5b3fb0;
+  --age-3: #8b5cf6;
+  --age-4: #c4b5fd;
+  --bar: #a78bfa;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow: 0 8px 24px -8px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 24px 60px -12px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
 }
 
 /* ============ Base ============ */
@@ -113,10 +112,8 @@ a {
   color: var(--primary);
   text-underline-offset: 3px;
 }
-@media (prefers-color-scheme: dark) {
-  a {
-    color: var(--violet);
-  }
+:where(:root[data-theme='dark']) a {
+  color: var(--violet);
 }
 
 h1,
@@ -256,10 +253,8 @@ button.danger {
   border-color: var(--danger);
   color: #fff;
 }
-@media (prefers-color-scheme: dark) {
-  button.danger {
-    color: #2a0a12;
-  }
+:where(:root[data-theme='dark']) button.danger {
+  color: #2a0a12;
 }
 button.danger-outline {
   color: var(--danger);
@@ -439,10 +434,8 @@ ul.plain li {
 .features li svg {
   color: var(--primary);
 }
-@media (prefers-color-scheme: dark) {
-  .features li svg {
-    color: var(--violet);
-  }
+:where(:root[data-theme='dark']) .features li svg {
+  color: var(--violet);
 }
 .login-card {
   display: grid;
@@ -2124,14 +2117,19 @@ input.card-check {
   border-radius: 6px;
 }
 /* Violeta más claro para textos y links en modo oscuro (contraste 4.5 o más) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --accent-text: #a78bfa;
-  }
+:root[data-theme='dark'] {
+  --accent-text: #a78bfa;
 }
 button.link,
 button.repo-link,
 .seg button.on,
 .seg button.on .seg-count {
   color: var(--accent-text, var(--primary));
+}
+/* El botón de tema gira suave al cambiar */
+.theme-toggle svg {
+  transition: transform 0.3s var(--ease);
+}
+.theme-toggle:active svg {
+  transform: rotate(-30deg);
 }
