@@ -73,6 +73,22 @@ export interface WorkflowRun {
   created_at: string
 }
 
+export type Severity = 'critical' | 'high' | 'medium' | 'low'
+
+export interface DependabotAlert {
+  number: number
+  state: string
+  html_url: string
+  created_at: string
+  dependency: { package: { ecosystem: string; name: string }; manifest_path: string; scope: string | null }
+  security_advisory: { ghsa_id: string; cve_id: string | null; summary: string; severity: Severity }
+  security_vulnerability: {
+    severity: Severity
+    vulnerable_version_range: string
+    first_patched_version: { identifier: string } | null
+  }
+}
+
 export interface PagesSite {
   html_url: string | null
   status: 'built' | 'building' | 'errored' | null
@@ -258,6 +274,11 @@ export class GitHub {
       `/repos/${repo.full_name}/actions/runs?per_page=1&branch=${branch}`,
     )
     return data.workflow_runs[0] ?? null
+  }
+
+  /** Alertas de Dependabot abiertas del repo (necesita el permiso "Dependabot alerts: Read-only"). */
+  async dependabotAlerts(repo: Repo): Promise<DependabotAlert[]> {
+    return this.paginate<DependabotAlert>(`/repos/${repo.full_name}/dependabot/alerts?state=open&per_page=100`)
   }
 
   /** Sitio de GitHub Pages del repo, o null si no tiene Pages activado. */

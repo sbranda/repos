@@ -117,6 +117,9 @@ export default function Login({ onLogin, onInstall, online }: Props) {
                 <li>
                   <b>Actions</b>, <b>Issues</b> y <b>Pull requests</b>: Read-only
                 </li>
+                <li>
+                  <b>Dependabot alerts</b>: Read-only (para la pestaña Seguridad)
+                </li>
               </ul>
             </li>
             <li>Generalo y pegalo arriba.</li>

@@ -3,6 +3,7 @@
 
 import type { Repo, SearchItem } from './github'
 import { CI_LABEL, type CiMap } from './ci'
+import type { Alert } from './components/Security'
 
 const SEP = ';'
 
@@ -103,6 +104,28 @@ export function pendientesCsv(items: (SearchItem & { kind: 'pr' | 'issue'; repoN
       fecha(i.created_at),
       fecha(i.updated_at),
       i.html_url,
+    ]),
+  )
+}
+
+const GRAVEDAD = { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' } as const
+
+export function alertasCsv(alerts: Alert[]): string {
+  return toCsv(
+    ['Gravedad', 'Repo', 'Paquete', 'Ecosistema', 'Resumen', 'Versiones afectadas', 'Arreglado en', 'Archivo', 'CVE', 'GHSA', 'Creada', 'URL'],
+    alerts.map((a) => [
+      GRAVEDAD[a.security_vulnerability?.severity ?? a.security_advisory.severity],
+      a.repo.name,
+      a.dependency.package.name,
+      a.dependency.package.ecosystem,
+      a.security_advisory.summary,
+      a.security_vulnerability.vulnerable_version_range,
+      a.security_vulnerability.first_patched_version?.identifier,
+      a.dependency.manifest_path,
+      a.security_advisory.cve_id,
+      a.security_advisory.ghsa_id,
+      fecha(a.created_at),
+      a.html_url,
     ]),
   )
 }
