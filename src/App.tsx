@@ -281,7 +281,7 @@ export default function App() {
       )}
 
       {view === 'repos' && checkedRepos.length > 0 && (
-        <BatchBar gh={gh} repos={checkedRepos} onUpdated={replaceRepo} onClear={() => setChecked(new Set())} />
+        <BatchBar gh={gh} repos={checkedRepos} knownTopics={knownTopics} onUpdated={replaceRepo} onClear={() => setChecked(new Set())} />
       )}
     </div>
   )

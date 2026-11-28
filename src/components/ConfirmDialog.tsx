@@ -7,12 +7,14 @@ interface Props {
   danger?: boolean
   busy?: boolean
   busyLabel?: string
+  /** Deshabilita el botón de confirmar (por ejemplo, si falta elegir algo). */
+  confirmDisabled?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
 /** Diálogo de confirmación que se muestra antes de cualquier cambio en GitHub. */
-export default function ConfirmDialog({ title, children, confirmLabel, danger, busy, busyLabel, onConfirm, onCancel }: Props) {
+export default function ConfirmDialog({ title, children, confirmLabel, danger, busy, busyLabel, confirmDisabled, onConfirm, onCancel }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function ConfirmDialog({ title, children, confirmLabel, danger, b
         <button onClick={onCancel} disabled={busy}>
           Cancelar
         </button>
-        <button className={danger ? 'danger' : 'primary'} onClick={onConfirm} disabled={busy}>
+        <button className={danger ? 'danger' : 'primary'} onClick={onConfirm} disabled={busy || confirmDisabled}>
           {busy ? (busyLabel ?? 'Aplicando…') : confirmLabel}
         </button>
       </div>
