@@ -174,6 +174,10 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             </span>
           )}
         </label>
+        {/* El lector de pantalla anuncia cuántos repos quedan al filtrar o buscar. */}
+        <span className="sr-only" aria-live="polite">
+          {loading && !repos.length ? '' : `${visible.length} de ${repos.length} repos`}
+        </span>
         {repos.length > 0 && (
           <span className={`freshness ${loading ? 'busy' : ''}`} role="status">
             {loading ? (
@@ -221,7 +225,12 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
               onChange={() => toggle(r.id)}
               aria-label={`Seleccionar ${r.name}`}
             />
-            <button className="repo-row" onClick={() => onSelect(r.id)}>
+            <button
+              className="repo-row"
+              data-repo-id={r.id}
+              aria-current={r.id === selectedId ? 'true' : undefined}
+              onClick={() => onSelect(r.id)}
+            >
               <span className="repo-name">{r.name}</span>
               <span className="badges">
                 {r.private && (

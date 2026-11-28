@@ -153,11 +153,11 @@ export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
           ))}
         </ul>
       )}
-      {load.state === 'error' && <p className="error banner">{online ? load.message : 'Sin conexión: los PRs e issues se ven cuando vuelve internet.'}</p>}
+      {load.state === 'error' && <p className="error banner" role="alert">{online ? load.message : 'Sin conexión: los PRs e issues se ven cuando vuelve internet.'}</p>}
 
       {load.state === 'ok' && (
         <>
-          {refreshError && <p className="error small">No se pudo actualizar: {refreshError} Se ve lo último que se cargó.</p>}
+          {refreshError && <p className="error small" role="alert">No se pudo actualizar: {refreshError} Se ve lo último que se cargó.</p>}
           {items.length === 0 ? (
             <div className="empty-state">
               <InboxIcon size={32} />

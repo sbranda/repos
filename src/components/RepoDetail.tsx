@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Commit, Branch, GitHub, Issue, PullRequest, Repo, RepoChanges, WorkflowRun } from '../github'
 import {
   Archive,
@@ -78,6 +78,24 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
 
   useEffect(() => setForm(formFrom(repo)), [repo])
 
+  // Al abrir el detalle llevamos el foco al título, así el teclado y el lector de pantalla siguen ahí.
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    titleRef.current?.focus({ preventScroll: window.matchMedia('(min-width: 960px)').matches })
+  }, [])
+
+  // Escape cierra el detalle, salvo que haya un diálogo abierto o se esté escribiendo en un campo.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]')) return
+      const t = e.target as HTMLElement | null
+      if (t?.closest('input, textarea, select, [contenteditable="true"]')) return
+      onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   const changes = diff(repo, form)
   const dirty = Object.keys(changes).length > 0
 
@@ -114,7 +132,7 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
               </span>
             )}
           </p>
-          <h2>
+          <h2 ref={titleRef} tabIndex={-1}>
             <a href={repo.html_url} target="_blank" rel="noreferrer">
               {repo.name} <ExternalLink size={16} />
             </a>
@@ -140,7 +158,7 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
         </button>
       </div>
 
-      {message && <p className={message.kind === 'ok' ? 'success' : 'error'}>{message.text}</p>}
+      {message && <p className={message.kind === 'ok' ? 'success' : 'error'} role={message.kind === 'ok' ? 'status' : 'alert'}>{message.text}</p>}
 
       <div className="stats">
         <Stat label="Ramas" tone="violet" icon={<GitBranch size={18} />} s={branches} count={(d) => d.length} />

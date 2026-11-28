@@ -16,17 +16,17 @@
   --grad-text: linear-gradient(90deg, #7c3aed, #2563eb 60%, #db2777);
   --danger: #c42b4b;
   --danger-soft: #ffe4ea;
-  --ok: #0f8a5f;
+  --ok: #047857;
   --ok-soft: #dcfce9;
   --warn-bg: #fff1cc;
   --warn-text: #7a4b00;
   --violet: #7c3aed;
   --violet-soft: #ede9fe;
-  --blue: #2563eb;
+  --blue: #1d4ed8;
   --blue-soft: #dbeafe;
   --pink: #db2777;
   --pink-soft: #fce7f3;
-  --green: #0f8a5f;
+  --green: #047857;
   --green-soft: #dcfce9;
   --amber: #a15c00;
   --amber-soft: #fff1d6;
@@ -2092,4 +2092,46 @@ button.small-btn {
 }
 .list-head .freshness {
   margin-left: auto;
+}
+
+/* ============ Accesibilidad ============ */
+/* Texto solo para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* Casillas de selección de 24 px: más fáciles de tocar */
+input.card-check {
+  width: 24px;
+  height: 24px;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+/* El título del detalle recibe el foco al abrirse: borde solo si se usa el teclado */
+.detail h2:focus {
+  outline: none;
+}
+.detail h2:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+/* Violeta más claro para textos y links en modo oscuro (contraste 4.5 o más) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-text: #a78bfa;
+  }
+}
+button.link,
+button.repo-link,
+.seg button.on,
+.seg button.on .seg-count {
+  color: var(--accent-text, var(--primary));
 }

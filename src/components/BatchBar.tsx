@@ -81,7 +81,7 @@ export default function BatchBar({ gh, repos, onUpdated, onClear }: Props) {
       </div>
 
       {results && (
-        <p className={failed.length ? 'error small' : 'success small'}>
+        <p className={failed.length ? 'error small' : 'success small'} role={failed.length ? 'alert' : 'status'}>
           {results.length - failed.length} de {results.length} aplicados.
           {failed.map((f) => (
             <span key={f.name} className="block">
