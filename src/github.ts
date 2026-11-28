@@ -216,8 +216,9 @@ export class GitHub {
     return this.request<User>('/user').then((r) => r.data)
   }
 
+  /** Tus repos y los de las organizaciones de las que sos miembro (los que el token deja ver). */
   listRepos() {
-    return this.paginate<Repo>('/user/repos?per_page=100&affiliation=owner&sort=pushed')
+    return this.paginate<Repo>('/user/repos?per_page=100&affiliation=owner,organization_member&sort=pushed')
   }
 
   listBranches(repo: Repo) {
@@ -347,9 +348,9 @@ export class GitHub {
     }
   }
 
-  /** PRs o issues abiertos en todos los repos del usuario (búsqueda de GitHub). */
-  async searchOpen(login: string, kind: 'pr' | 'issue', perPage = 8): Promise<SearchResult> {
-    const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
+  /** PRs o issues abiertos en todos los repos de esas cuentas (búsqueda de GitHub). */
+  async searchOpen(owners: string[], kind: 'pr' | 'issue', perPage = 8): Promise<SearchResult> {
+    const q = encodeURIComponent(`is:open is:${kind} ${ownersQuery(owners)} archived:false`)
     const { data } = await this.request<SearchResult>(`/search/issues?q=${q}&sort=updated&order=desc&per_page=${perPage}`)
     return data
   }
@@ -358,8 +359,8 @@ export class GitHub {
    * Todos los PRs o issues abiertos de tus repos (hasta `max`). La búsqueda de GitHub
    * devuelve de a 100 y como mucho 1000 resultados.
    */
-  async searchAllOpen(login: string, kind: 'pr' | 'issue', max = 300): Promise<SearchResult> {
-    const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
+  async searchAllOpen(owners: string[], kind: 'pr' | 'issue', max = 300): Promise<SearchResult> {
+    const q = encodeURIComponent(`is:open is:${kind} ${ownersQuery(owners)} archived:false`)
     let next: string | null = `/search/issues?q=${q}&sort=updated&order=desc&per_page=100`
     const items: SearchItem[] = []
     let total = 0
@@ -456,4 +457,9 @@ function traducirError(status: number, message: string): string {
     return `GitHub rechazó el pedido (${message}). Revisá que el token tenga permiso de "Administration" y acceso a este repo.`
   if (status === 422) return `GitHub no aceptó el cambio: ${message}`
   return `Error ${status}: ${message}`
+}
+
+/** "user:a user:b": la búsqueda de GitHub toma varias cuentas como "cualquiera de estas". */
+function ownersQuery(owners: string[]): string {
+  return owners.map((o) => `user:${o}`).join(' ')
 }

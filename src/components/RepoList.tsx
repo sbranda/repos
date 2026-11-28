@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, CircleCheck, CircleX, Clock, Download, GitFork, Globe, LoaderCircle, Lock, Pin, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, Building2, CircleCheck, CircleX, Clock, Download, GitFork, Globe, LoaderCircle, Lock, Pin, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
 import { CI_LABEL, type CiMap } from '../ci'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
@@ -42,7 +42,7 @@ export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}, favs: Se
   const out = repos.filter((r) => {
     if (
       q &&
-      !r.name.toLowerCase().includes(q) &&
+      !r.full_name.toLowerCase().includes(q) &&
       !(r.description ?? '').toLowerCase().includes(q) &&
       !(r.topics ?? []).some((t) => t.includes(q))
     )
@@ -95,9 +95,11 @@ interface Props {
   /** Repos marcados como favoritos. */
   favs: Set<number>
   onToggleFav: (id: number) => void
+  /** Al mirar todas las cuentas: tu usuario, para marcar los repos de organizaciones. */
+  me?: string | null
 }
 
-export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked, ci, ciPending, favs, onToggleFav }: Props) {
+export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked, ci, ciPending, favs, onToggleFav, me }: Props) {
   const languages = useMemo(
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
@@ -287,6 +289,11 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             >
               <span className="repo-name">{r.name}</span>
               <span className="badges">
+                {me && r.owner.login !== me && (
+                  <span className="badge org" title={`Repo de la organización ${r.owner.login}`}>
+                    <Building2 size={12} aria-hidden="true" /> {r.owner.login}
+                  </span>
+                )}
                 {r.private && (
                   <span className="badge private">
                     <Lock size={12} /> Privado

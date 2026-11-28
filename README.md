@@ -34,7 +34,13 @@ La app es estática y corre entera en tu navegador. Para hablar con GitHub usa u
 
 El token queda guardado solo en tu navegador y se envía únicamente a `api.github.com`. Con **Salir** se borra junto con la lista guardada, así que en una compu compartida cada persona puede entrar con su cuenta. Los favoritos se guardan aparte para cada cuenta.
 
-Por ahora se listan los repos de tu cuenta personal (los que sos dueño). Los repos de organizaciones no aparecen.
+### Repos de organizaciones
+
+La app muestra tus repos y los de las organizaciones de las que sos miembro, siempre que el token los deje ver. Si hay más de una cuenta aparece un selector arriba para elegir cuál mirar (o todas juntas); Resumen, Pendientes y Seguridad siguen esa elección.
+
+- Un **fine-grained token** sirve para una sola cuenta: en **Resource owner** elegís tu usuario o una organización. Para una organización puede hacer falta que un admin lo apruebe.
+- Para ver tu cuenta y tus organizaciones juntas, usá un [token classic](https://github.com/settings/tokens/new?scopes=repo,security_events&description=Mis%20repos) con los permisos `repo` y `security_events`. Si la organización usa SSO, autorizá el token con **Configure SSO**.
+- Los repos nuevos se crean siempre en tu cuenta personal.
 
 ## Tener tu propia copia
 

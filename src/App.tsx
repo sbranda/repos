@@ -17,6 +17,8 @@ import { useTheme } from './theme'
 import { clearCi, useCiStatuses } from './ci'
 import { useFavorites } from './favorites'
 import { useKeyboardShortcuts } from './shortcuts'
+import { useAccount } from './accounts'
+import AccountSelect from './components/AccountSelect'
 import { Download, Inbox as InboxIcon, ShieldAlert, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
@@ -135,11 +137,12 @@ export default function App() {
     setRepos((list) => list.map((r) => (r.id === updated.id ? updated : r)))
   }, [])
 
-  const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
+  const { owners, account, setAccount, scoped, searchOwners } = useAccount(user?.login ?? null, repos)
+  const knownTopics = useMemo(() => allTopics(scoped).map(([t]) => t), [scoped])
   const { ci, pending: ciPending } = useCiStatuses(gh, repos, savedAt, online, loading)
   const { favs, toggleFav } = useFavorites(user?.login ?? null)
   useKeyboardShortcuts(!!user)
-  const visible = useMemo(() => applyFilters(repos, filters, ci, favs), [repos, filters, ci, favs])
+  const visible = useMemo(() => applyFilters(scoped, filters, ci, favs), [scoped, filters, ci, favs])
   const selected = repos.find((r) => r.id === selectedId) ?? null
 
   // Al cerrar el detalle, el foco vuelve al repo que estaba abierto (si no, queda perdido).
@@ -191,6 +194,7 @@ export default function App() {
       )}
       {error && <p className="error banner" role="alert">{error}</p>}
 
+      <div className="view-bar">
       <nav className="tabs" aria-label="Vistas">
         <button className={view === 'repos' ? 'tab active' : 'tab'} aria-current={view === 'repos' ? 'page' : undefined} onClick={() => setView('repos')}>
           <LayoutGrid size={16} /> Repos
@@ -217,13 +221,26 @@ export default function App() {
           <ShieldAlert size={16} /> Seguridad
         </button>
       </nav>
+      {owners.length > 1 && (
+        <AccountSelect
+          owners={owners}
+          value={account}
+          onChange={(a) => {
+            setAccount(a)
+            setChecked(new Set())
+            setSelectedId(null)
+          }}
+        />
+      )}
+      </div>
 
       {view === 'seguridad' ? (
         <div className="layout">
           <Security
+            key={account}
             gh={gh}
             login={user.login}
-            repos={repos}
+            repos={scoped}
             online={online}
             onOpenRepo={(id) => {
               setSelectedId(id)
@@ -236,7 +253,8 @@ export default function App() {
           <Inbox
             gh={gh}
             login={user.login}
-            repos={repos}
+            owners={searchOwners}
+            repos={scoped}
             online={online}
             onOpenRepo={(id) => {
               setSelectedId(id)
@@ -248,8 +266,8 @@ export default function App() {
         <div className="layout">
           <Summary
             gh={gh}
-            login={user.login}
-            repos={repos}
+            owners={searchOwners}
+            repos={scoped}
             loading={loading}
             onOpenRepo={(id) => {
               setSelectedId(id)
@@ -262,7 +280,8 @@ export default function App() {
         <section className="list-pane">
           <RepoList
             compact={!!selected}
-            repos={repos}
+            repos={scoped}
+            me={account ? null : user.login}
             visible={visible}
             loading={loading}
             savedAt={savedAt}
@@ -304,6 +323,8 @@ export default function App() {
           onCreated={(r) => {
             // Lo sumamos arriba de todo y lo dejamos abierto, sin filtros que lo escondan.
             setRepos((list) => [r, ...list.filter((x) => x.id !== r.id)])
+            // Se crea en tu cuenta personal: si estabas mirando una organización, pasamos a la tuya.
+            if (account && account !== r.owner.login) setAccount(r.owner.login)
             setFilters(DEFAULT_FILTERS)
             setView('repos')
             setSelectedId(r.id)

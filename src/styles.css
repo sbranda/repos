@@ -974,7 +974,8 @@ p.error.banner {
   color: #fff;
   box-shadow: 0 6px 16px -6px rgb(109 40 217 / 0.6);
 }
-.tabs + .layout {
+.tabs + .layout,
+.view-bar + .layout {
   padding-top: 1rem;
 }
 
@@ -2396,4 +2397,56 @@ button.repo-link,
 /* Al moverse con las flechas, la tarjeta no queda tapada por la barra de arriba */
 .repo-row {
   scroll-margin: 88px 0 16px;
+}
+
+/* Barra de vistas: pestañas y, si hay organizaciones, el selector de cuenta */
+.view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  margin-left: max(16px, calc((100% - 1400px) / 2 + 16px));
+  margin-right: 16px;
+}
+.view-bar .tabs {
+  margin: 0;
+}
+.account-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.account-select svg {
+  position: absolute;
+  left: 0.8rem;
+  color: var(--primary);
+  pointer-events: none;
+}
+.account-select select {
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding-left: 2.3rem;
+  min-height: 44px;
+  box-shadow: var(--shadow-sm);
+  max-width: 100%;
+}
+.badge.org {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+@media (max-width: 560px) {
+  .view-bar {
+    margin-left: 16px;
+  }
+  .view-bar .tabs {
+    margin: 0;
+    flex: 1 1 100%;
+  }
+  .account-select,
+  .account-select select {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
