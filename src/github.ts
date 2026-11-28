@@ -34,6 +34,15 @@ export interface User {
 export interface Branch {
   name: string
   protected: boolean
+  commit?: { sha: string }
+}
+
+export interface Comparison {
+  status: 'ahead' | 'behind' | 'identical' | 'diverged'
+  ahead_by: number
+  behind_by: number
+  merge_base_commit: { commit: { committer: { date: string } | null } }
+  commits: { commit: { committer: { date: string } | null } }[]
 }
 
 export interface PullRequest {
@@ -42,7 +51,9 @@ export interface PullRequest {
   html_url: string
   draft: boolean
   user: { login: string } | null
-  head: { ref: string }
+  head: { ref: string; sha?: string; repo?: { full_name: string } | null }
+  merged_at?: string | null
+  closed_at?: string | null
 }
 
 export interface Issue {
@@ -199,6 +210,40 @@ export class GitHub {
 
   listPulls(repo: Repo) {
     return this.paginate<PullRequest>(`/repos/${repo.full_name}/pulls?state=open&per_page=100`)
+  }
+
+  /** PRs cerrados, los más recientes primero (hasta 300: alcanza para reconocer ramas mergeadas). */
+  async listClosedPulls(repo: Repo): Promise<PullRequest[]> {
+    let next: string | null = `/repos/${repo.full_name}/pulls?state=closed&sort=updated&direction=desc&per_page=100`
+    const out: PullRequest[] = []
+    while (next && out.length < 300) {
+      const { data, res }: { data: PullRequest[]; res: Response } = await this.request<PullRequest[]>(next)
+      out.push(...data)
+      next = parseNext(res.headers.get('link'))
+    }
+    return out
+  }
+
+  /** Qué commits tiene `head` que no estén en `base`. */
+  async compare(repo: Repo, base: string, head: string): Promise<Comparison> {
+    const { data } = await this.request<Comparison>(
+      `/repos/${repo.full_name}/compare/${encodeURIComponent(base)}...${encodeURIComponent(head)}?per_page=1`,
+    )
+    return data
+  }
+
+  async deleteBranch(repo: Repo, branch: string): Promise<void> {
+    const ref = branch.split('/').map(encodeURIComponent).join('/')
+    try {
+      await this.request<void>(`/repos/${repo.full_name}/git/refs/heads/${ref}`, { method: 'DELETE' })
+    } catch (err) {
+      // Si ya no existe, el resultado es el mismo que queríamos.
+      if (err instanceof GitHubError && err.status === 422 && /does not exist/i.test(err.message)) return
+      if (err instanceof GitHubError && (err.status === 403 || err.status === 404)) {
+        throw new GitHubError(err.status, 'GitHub no dejó borrar la rama. Revisá que el token tenga el permiso "Contents: Read and write".')
+      }
+      throw err
+    }
   }
 
   async listIssues(repo: Repo) {

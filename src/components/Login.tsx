@@ -112,7 +112,10 @@ export default function Login({ onLogin, onInstall, online }: Props) {
                   <b>Pages</b>: Read and write (para ver y activar sitios)
                 </li>
                 <li>
-                  <b>Contents</b>, <b>Actions</b>, <b>Issues</b> y <b>Pull requests</b>: Read-only
+                  <b>Contents</b>: Read and write (para ver el README y borrar ramas mergeadas)
+                </li>
+                <li>
+                  <b>Actions</b>, <b>Issues</b> y <b>Pull requests</b>: Read-only
                 </li>
               </ul>
             </li>
