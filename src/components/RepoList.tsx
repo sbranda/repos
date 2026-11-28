@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Repo } from '../github'
-import { Archive, Clock, Download, GitFork, Globe, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
-import { diasDesde, haceCuanto } from '../util'
+import { Archive, Clock, Download, GitFork, Globe, LayoutGrid, List, Lock, RefreshCw, Search, SlidersHorizontal, Star, X } from 'lucide-react'
+import { diasDesde, haceCuanto, storage } from '../util'
 import { languageColor } from '../languages'
 import { download, fileName, reposCsv } from '../csv'
 
@@ -80,6 +80,17 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
     [repos],
   )
   const topics = useMemo(() => allTopics(repos), [repos])
+  const [open, setOpen] = useState(() => storage.get(OPEN_KEY) === '1')
+  const toggleOpen = (v: boolean) => {
+    setOpen(v)
+    storage.set(OPEN_KEY, v ? '1' : '0', true)
+  }
+  const [density, setDensityState] = useState<'rows' | 'cards'>(() => (storage.get(DENSITY_KEY) === 'cards' ? 'cards' : 'rows'))
+  const setDensity = (d: 'rows' | 'cards') => {
+    setDensityState(d)
+    storage.set(DENSITY_KEY, d, true)
+  }
+  const active = activeFilters(filters)
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) => onFilters({ ...filters, [k]: v })
 
   const allVisibleChecked = visible.length > 0 && visible.every((r) => checked.has(r.id))
@@ -97,6 +108,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
   return (
     <>
       <div className="filters">
+        <div className="filter-top">
         <div className="search">
           <Search size={18} aria-hidden="true" />
           <input
@@ -107,8 +119,43 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             aria-label="Buscar"
           />
         </div>
-        <div className="filter-row">
-          <SlidersHorizontal size={16} className="muted" aria-hidden="true" />
+          <button
+            type="button"
+            className={`filters-toggle ${active.length ? 'has-active' : ''}`}
+            aria-expanded={open}
+            aria-controls="more-filters"
+            onClick={() => toggleOpen(!open)}
+          >
+            <SlidersHorizontal size={16} /> <span className="hide-sm">Filtros</span>
+            {active.length > 0 && <span className="tab-count">{active.length}</span>}
+          </button>
+          <select className="sort-select" value={filters.sort} onChange={(e) => set('sort', e.target.value as Filters['sort'])} aria-label="Orden">
+            <option value="pushed">Último push</option>
+            <option value="name">Nombre</option>
+            <option value="stars">Estrellas</option>
+          </select>
+          <div className="density" role="group" aria-label="Vista">
+            <button type="button" className={density === 'rows' ? 'on' : ''} aria-pressed={density === 'rows'} onClick={() => setDensity('rows')} title="Lista compacta">
+              <List size={16} />
+            </button>
+            <button type="button" className={density === 'cards' ? 'on' : ''} aria-pressed={density === 'cards'} onClick={() => setDensity('cards')} title="Tarjetas">
+              <LayoutGrid size={16} />
+            </button>
+          </div>
+        </div>
+        {!open && active.length > 0 && (
+          <div className="active-filters">
+            {active.map(([key, label]) => (
+              <button key={key} type="button" className="active-chip" onClick={() => onFilters({ ...filters, [key]: DEFAULT_FILTERS[key] })} title="Quitar filtro">
+                {label} <X size={13} />
+              </button>
+            ))}
+            <button type="button" className="link small" onClick={() => onFilters({ ...DEFAULT_FILTERS, text: filters.text, sort: filters.sort })}>
+              Limpiar
+            </button>
+          </div>
+        )}
+        <div className="filter-row" id="more-filters" hidden={!open}>
           <select value={filters.status} onChange={(e) => set('status', e.target.value as Filters['status'])} aria-label="Estado">
             <option value="active">Activos</option>
             <option value="archived">Archivados</option>
@@ -151,15 +198,15 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             <option value={365}>Sin cambios hace 1+ año</option>
             <option value={730}>Sin cambios hace 2+ años</option>
           </select>
-          <select value={filters.sort} onChange={(e) => set('sort', e.target.value as Filters['sort'])} aria-label="Orden">
-            <option value="pushed">Último push</option>
-            <option value="name">Nombre</option>
-            <option value="stars">Estrellas</option>
-          </select>
           <label className="check chip">
             <input type="checkbox" checked={filters.forks} onChange={(e) => set('forks', e.target.checked)} />
             Incluir forks
           </label>
+          {active.length > 0 && (
+            <button type="button" className="link small" onClick={() => onFilters({ ...DEFAULT_FILTERS, text: filters.text, sort: filters.sort })}>
+              Limpiar filtros
+            </button>
+          )}
         </div>
       </div>
 
@@ -198,7 +245,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
         )}
       </div>
 
-      <ul className={`repo-grid ${compact ? 'compact' : ''}`}>
+      <ul className={`repo-grid ${density === 'rows' ? 'rows' : compact ? 'compact' : ''}`}>
         {loading &&
           !repos.length &&
           Array.from({ length: 6 }, (_, i) => (
@@ -289,4 +336,20 @@ export function allTopics(repos: Repo[]): [string, number][] {
   const count = new Map<string, number>()
   for (const r of repos) for (const t of r.topics ?? []) count.set(t, (count.get(t) ?? 0) + 1)
   return [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+const OPEN_KEY = 'repos:filtersOpen'
+const DENSITY_KEY = 'repos:density'
+
+/** Filtros distintos de los de fábrica (sin contar búsqueda ni orden), con un texto corto para mostrarlos. */
+function activeFilters(f: Filters): [keyof Filters, string][] {
+  const out: [keyof Filters, string][] = []
+  if (f.status !== DEFAULT_FILTERS.status) out.push(['status', f.status === 'archived' ? 'Archivados' : 'Activos y archivados'])
+  if (f.visibility !== 'all') out.push(['visibility', f.visibility === 'public' ? 'Públicos' : 'Privados'])
+  if (f.pages !== 'all') out.push(['pages', f.pages === 'with' ? 'Con sitio' : 'Sin sitio'])
+  if (f.language) out.push(['language', f.language])
+  if (f.topic) out.push(['topic', `#${f.topic}`])
+  if (f.inactive) out.push(['inactive', f.inactive === 180 ? 'Sin cambios 6+ meses' : f.inactive === 365 ? 'Sin cambios 1+ año' : 'Sin cambios 2+ años'])
+  if (!f.forks) out.push(['forks', 'Sin forks'])
+  return out
 }
