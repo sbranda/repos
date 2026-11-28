@@ -11,14 +11,13 @@ import {
   GitCommitHorizontal,
   GitBranch,
   GitPullRequest,
-  Globe,
   LoaderCircle,
   Lock,
   Pencil,
   Zap,
   X,
 } from 'lucide-react'
-import { haceCuanto, storage } from '../util'
+import { haceCuanto } from '../util'
 import { languageColor } from '../languages'
 import ConfirmDialog from './ConfirmDialog'
 import PagesPanel from './PagesPanel'
@@ -37,15 +36,6 @@ interface Props {
   /** Al tocar una etiqueta, filtra la lista por ella. */
   onTopic: (t: string) => void
 }
-
-type DetailTab = 'general' | 'trabajo' | 'sitio' | 'editar'
-const TABS: [DetailTab, string, typeof Pencil][] = [
-  ['general', 'General', BookOpen],
-  ['trabajo', 'PRs y ramas', GitPullRequest],
-  ['sitio', 'Sitio', Globe],
-  ['editar', 'Editar', Pencil],
-]
-const TAB_KEY = 'repos:detailTab'
 
 type Section<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error'; message: string }
 
@@ -81,11 +71,6 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
   const commits = useSection<Commit[]>(() => gh.listCommits(repo), [key])
   const readme = useSection<string | null>(() => gh.getReadmeHtml(repo), [key])
 
-  const [tab, setTabState] = useState<DetailTab>(() => (TABS.some(([t]) => t === storage.get(TAB_KEY)) ? (storage.get(TAB_KEY) as DetailTab) : 'general'))
-  const setTab = (t: DetailTab) => {
-    setTabState(t)
-    storage.set(TAB_KEY, t, false)
-  }
   const [form, setForm] = useState(() => formFrom(repo))
   const [pending, setPending] = useState<{ title: string; changes: RepoChanges; danger?: boolean } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -157,39 +142,25 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
 
       {message && <p className={message.kind === 'ok' ? 'success' : 'error'}>{message.text}</p>}
 
-      <nav className="detail-tabs" role="tablist" aria-label="Secciones del repo">
-        {TABS.map(([id, label, Icon]) => (
-          <button
-            key={id}
-            role="tab"
-            aria-selected={tab === id}
-            className={tab === id ? 'detail-tab active' : 'detail-tab'}
-            onClick={() => setTab(id)}
-          >
-            <Icon size={15} aria-hidden="true" />
-            <span className="detail-tab-label">{label}</span>
-            {id === 'trabajo' && pulls.state === 'ok' && issues.state === 'ok' && pulls.data.length + issues.data.length > 0 && (
-              <span className="tab-count">{pulls.data.length + issues.data.length}</span>
-            )}
-            {id === 'sitio' && repo.has_pages && <span className="tab-dot" title="Publicado" />}
-          </button>
-        ))}
-      </nav>
+      <div className="stats">
+        <Stat label="Ramas" tone="violet" icon={<GitBranch size={18} />} s={branches} count={(d) => d.length} />
+        <Stat label="PRs abiertos" tone="blue" icon={<GitPullRequest size={18} />} s={pulls} count={(d) => d.length} />
+        <Stat label="Issues abiertos" tone="pink" icon={<CircleDot size={18} />} s={issues} count={(d) => d.length} />
+        <div className="stat tone-green">
+          <span className="stat-icon">
+            <Zap size={18} />
+          </span>
+          <span className="stat-label">Último CI</span>
+          <CiStatus s={run} />
+        </div>
+      </div>
 
-      {tab === 'general' && (
-        <>
-          <div className="stats">
-            <Stat label="Ramas" tone="violet" icon={<GitBranch size={16} />} s={branches} count={(d) => d.length} onClick={() => setTab('trabajo')} />
-            <Stat label="PRs" tone="blue" icon={<GitPullRequest size={16} />} s={pulls} count={(d) => d.length} onClick={() => setTab('trabajo')} />
-            <Stat label="Issues" tone="pink" icon={<CircleDot size={16} />} s={issues} count={(d) => d.length} onClick={() => setTab('trabajo')} />
-            <div className="stat tone-green">
-              <span className="stat-icon">
-                <Zap size={16} />
-              </span>
-              <span className="stat-label">Último CI</span>
-              <CiStatus s={run} />
-            </div>
-          </div>
+      <PagesPanel
+        gh={gh}
+        repo={repo}
+        branches={branches.state === 'ok' ? branches.data.map((b) => b.name) : null}
+        onChanged={(has_pages) => onUpdated({ ...repo, has_pages })}
+      />
 
       <details open>
         <summary>
@@ -228,13 +199,8 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
         {readme.state === 'ok' &&
           (readme.data ? <Readme html={readme.data} repo={repo} /> : <p className="muted small">Este repo no tiene README.</p>)}
       </details>
-        </>
-      )}
 
-      {tab === 'trabajo' && (
-        <>
-
-      <details open>
+      <details>
         <summary>
           <GitPullRequest size={16} /> Pull requests abiertos
         </summary>
@@ -256,7 +222,7 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
         />
       </details>
 
-      <details open>
+      <details>
         <summary>
           <CircleDot size={16} /> Issues abiertos
         </summary>
@@ -273,7 +239,7 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
         />
       </details>
 
-      <details open>
+      <details>
         <summary>
           <GitBranch size={16} /> Ramas
         </summary>
@@ -292,21 +258,10 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
           <BranchCleanup gh={gh} repo={repo} onDeleted={() => setBranchesVersion((v) => v + 1)} />
         )}
       </details>
-        </>
-      )}
 
-      {tab === 'sitio' && (
-        <PagesPanel
-        gh={gh}
-        repo={repo}
-        branches={branches.state === 'ok' ? branches.data.map((b) => b.name) : null}
-        onChanged={(has_pages) => onUpdated({ ...repo, has_pages })}
-      />
-      )}
-
-      {tab === 'editar' && (
-        <>
-
+      <h3>
+        <Pencil size={16} /> Editar
+      </h3>
       {repo.archived ? (
         <p className="muted">Este repo está archivado y es de solo lectura. Desarchivalo para poder editarlo.</p>
       ) : (
@@ -373,8 +328,6 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
           </button>
         )}
       </div>
-        </>
-      )}
 
       {pending && (
         <ConfirmDialog
@@ -461,21 +414,19 @@ function Stat<T>({
   count,
   icon,
   tone,
-  onClick,
 }: {
   label: string
   s: Section<T>
   count: (d: T) => number
   icon: React.ReactNode
   tone: string
-  onClick?: () => void
 }) {
   return (
-    <button type="button" className={`stat tone-${tone}`} onClick={onClick}>
+    <div className={`stat tone-${tone}`}>
       <span className="stat-icon">{icon}</span>
       <span className="stat-label">{label}</span>
       <span className="stat-value">{s.state === 'ok' ? count(s.data) : s.state === 'loading' ? '…' : '—'}</span>
-    </button>
+    </div>
   )
 }
 

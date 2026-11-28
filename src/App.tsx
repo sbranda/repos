@@ -144,25 +144,6 @@ export default function App() {
             Mis <span className="gradient-text">repos</span>
           </h1>
         </div>
-        <nav className="tabs" aria-label="Vistas">
-          <button className={view === 'repos' ? 'tab active' : 'tab'} aria-current={view === 'repos' ? 'page' : undefined} onClick={() => setView('repos')}>
-            <LayoutGrid size={16} /> Repos
-          </button>
-          <button
-            className={view === 'resumen' ? 'tab active' : 'tab'}
-            aria-current={view === 'resumen' ? 'page' : undefined}
-            onClick={() => setView('resumen')}
-          >
-            <LayoutDashboard size={16} /> Resumen
-          </button>
-          <button
-            className={view === 'pendientes' ? 'tab active' : 'tab'}
-            aria-current={view === 'pendientes' ? 'page' : undefined}
-            onClick={() => setView('pendientes')}
-          >
-            <InboxIcon size={16} /> Pendientes
-          </button>
-        </nav>
         <div className="user">
           {install && (
             <button onClick={install}>
@@ -192,6 +173,25 @@ export default function App() {
       )}
       {error && <p className="error banner">{error}</p>}
 
+      <nav className="tabs" aria-label="Vistas">
+        <button className={view === 'repos' ? 'tab active' : 'tab'} aria-current={view === 'repos' ? 'page' : undefined} onClick={() => setView('repos')}>
+          <LayoutGrid size={16} /> Repos
+        </button>
+        <button
+          className={view === 'resumen' ? 'tab active' : 'tab'}
+          aria-current={view === 'resumen' ? 'page' : undefined}
+          onClick={() => setView('resumen')}
+        >
+          <LayoutDashboard size={16} /> Resumen
+        </button>
+        <button
+          className={view === 'pendientes' ? 'tab active' : 'tab'}
+          aria-current={view === 'pendientes' ? 'page' : undefined}
+          onClick={() => setView('pendientes')}
+        >
+          <InboxIcon size={16} /> Pendientes
+        </button>
+      </nav>
 
       {view === 'pendientes' ? (
         <div className="layout">
