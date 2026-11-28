@@ -1991,3 +1991,84 @@ button.repo-link:hover:not(:disabled) {
     padding: 0.45rem 0.7rem;
   }
 }
+
+/* ============ Limpiar ramas ============ */
+.cleanup {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--border);
+  justify-items: start;
+}
+p.cleanup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cleanup p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+}
+.cleanup p > svg {
+  flex: none;
+  margin-top: 0.15rem;
+}
+.cleanup-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+.cleanup-head .check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cleanup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+}
+.cleanup-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.2rem 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.cleanup-list li:hover {
+  background: var(--surface-2);
+}
+.cleanup-list .check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.cleanup-list code {
+  overflow-wrap: anywhere;
+}
+.cleanup-list .muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.cleanup-kept {
+  width: 100%;
+}
+.cleanup-kept summary {
+  cursor: pointer;
+}
+.cleanup button.link {
+  margin-left: 0;
+}

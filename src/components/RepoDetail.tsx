@@ -23,6 +23,7 @@ import ConfirmDialog from './ConfirmDialog'
 import PagesPanel from './PagesPanel'
 import Readme from './Readme'
 import TopicsInput from './TopicsInput'
+import BranchCleanup from './BranchCleanup'
 import { sameTopics } from '../topics'
 
 interface Props {
@@ -57,7 +58,13 @@ function useSection<T>(load: () => Promise<T>, deps: unknown[]): Section<T> {
 
 export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, onTopic }: Props) {
   const key = repo.full_name
-  const branches = useSection<Branch[]>(() => gh.listBranches(repo), [key])
+  const [branchesVersion, setBranchesVersion] = useState(0)
+  const branches = useSection<Branch[]>(() => gh.listBranches(repo), [key, branchesVersion])
+  // Una vez que aparece "Limpiar ramas" no lo sacamos al recargar la lista, para no perder el resultado.
+  const [showCleanup, setShowCleanup] = useState(false)
+  useEffect(() => {
+    if (branches.state === 'ok' && branches.data.length > 1) setShowCleanup(true)
+  }, [branches])
   const pulls = useSection<PullRequest[]>(() => gh.listPulls(repo), [key])
   const issues = useSection<Issue[]>(() => gh.listIssues(repo), [key])
   const run = useSection<WorkflowRun | null>(() => gh.latestRun(repo), [key])
@@ -247,6 +254,9 @@ export default function RepoDetail({ gh, repo, onUpdated, onClose, knownTopics, 
             </li>
           )}
         />
+        {showCleanup && (
+          <BranchCleanup gh={gh} repo={repo} onDeleted={() => setBranchesVersion((v) => v + 1)} />
+        )}
       </details>
 
       <h3>
