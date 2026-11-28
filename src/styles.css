@@ -1825,3 +1825,169 @@ fieldset.options .check {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+
+/* ============ Pendientes ============ */
+.inbox {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+  animation: rise 0.4s var(--ease) both;
+}
+.inbox-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.seg button {
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+}
+.seg button.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.seg-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.seg button.on .seg-count {
+  background: var(--surface);
+  color: var(--primary);
+}
+.inbox-filters {
+  margin: 0;
+}
+.inbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.inbox-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.inbox-item.skeleton {
+  display: grid;
+  gap: 0.5rem;
+}
+.inbox-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+.inbox-icon.pr {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.inbox-icon.pr.draft {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.inbox-icon.issue {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+.inbox-main {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1;
+}
+.inbox-title {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.inbox-title svg {
+  color: var(--muted);
+  vertical-align: -1px;
+}
+.inbox-title:hover {
+  color: var(--primary);
+}
+.inbox-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.8rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+button.repo-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  font-weight: 700;
+  font-size: inherit;
+  color: var(--primary);
+  border-radius: 4px;
+}
+button.repo-link:hover:not(:disabled) {
+  transform: none;
+  text-decoration: underline;
+}
+.inbox-author,
+.inbox-comments {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.inbox-author img {
+  border-radius: 50%;
+}
+.inbox-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--label);
+  background: color-mix(in srgb, var(--label) 18%, transparent);
+  color: var(--text);
+}
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+.empty-state p {
+  margin: 0;
+}
+@media (max-width: 560px) {
+  .tab {
+    padding: 0.45rem 0.7rem;
+  }
+}

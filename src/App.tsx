@@ -7,15 +7,17 @@ import RepoList, { allTopics, applyFilters, DEFAULT_FILTERS, type Filters } from
 import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
 import Summary from './components/Summary'
+import Inbox from './components/Inbox'
 import { useInstallPrompt, useOnline } from './pwa'
 import Logo from './components/Logo'
 import NewRepoDialog from './components/NewRepoDialog'
-import { Download, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
+import { Download, Inbox as InboxIcon, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
 const VIEW_KEY = 'repos:view'
 
-type View = 'repos' | 'resumen'
+type View = 'repos' | 'resumen' | 'pendientes'
+const VIEWS: View[] = ['repos', 'resumen', 'pendientes']
 
 export default function App() {
   const [gh, setGh] = useState<GitHub | null>(null)
@@ -25,7 +27,10 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [view, setViewState] = useState<View>(() => (storage.get(VIEW_KEY) === 'resumen' ? 'resumen' : 'repos'))
+  const [view, setViewState] = useState<View>(() => {
+    const saved = storage.get(VIEW_KEY) as View | null
+    return saved && VIEWS.includes(saved) ? saved : 'repos'
+  })
   const setView = useCallback((v: View) => {
     setViewState(v)
     storage.set(VIEW_KEY, v, true)
@@ -179,9 +184,29 @@ export default function App() {
         >
           <LayoutDashboard size={16} /> Resumen
         </button>
+        <button
+          className={view === 'pendientes' ? 'tab active' : 'tab'}
+          aria-current={view === 'pendientes' ? 'page' : undefined}
+          onClick={() => setView('pendientes')}
+        >
+          <InboxIcon size={16} /> Pendientes
+        </button>
       </nav>
 
-      {view === 'resumen' ? (
+      {view === 'pendientes' ? (
+        <div className="layout">
+          <Inbox
+            gh={gh}
+            login={user.login}
+            repos={repos}
+            online={online}
+            onOpenRepo={(id) => {
+              setSelectedId(id)
+              setView('repos')
+            }}
+          />
+        </div>
+      ) : view === 'resumen' ? (
         <div className="layout">
           <Summary
             gh={gh}
