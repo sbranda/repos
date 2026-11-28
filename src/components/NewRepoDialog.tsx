@@ -276,7 +276,7 @@ export default function NewRepoDialog({ gh, login, repos, knownTopics, onCreated
             </ul>
             <p className="muted small">Borrar repos no se puede desde esta app: si te equivocás, se borra desde GitHub.</p>
             {steps.length > 0 && <StepList steps={steps} />}
-            {error && <p className="error">{error}</p>}
+            {error && <p className="error" role="alert">{error}</p>}
           </div>
           <div className="dialog-actions">
             <button onClick={() => setPhase('form')} disabled={phase === 'working'}>

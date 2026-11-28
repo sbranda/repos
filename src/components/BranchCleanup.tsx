@@ -82,7 +82,7 @@ export default function BranchCleanup({ gh, repo, onDeleted }: Props) {
         <button onClick={analyze}>
           <Scissors size={15} /> Buscar ramas ya mergeadas
         </button>
-        {error && <p className="error small">{error}</p>}
+        {error && <p className="error small" role="alert">{error}</p>}
       </div>
     )
   }
@@ -98,12 +98,12 @@ export default function BranchCleanup({ gh, repo, onDeleted }: Props) {
   return (
     <div className="cleanup">
       {deleted.length > 0 && (
-        <p className="success small">
+        <p className="success small" role="status">
           <CircleCheck size={15} /> {deleted.length === 1 ? 'Se borró 1 rama' : `Se borraron ${deleted.length} ramas`}: {deleted.map((b) => b.name).join(', ')}.
         </p>
       )}
       {errors.map((b) => (
-        <p key={b.name} className="error small">
+        <p key={b.name} className="error small" role="alert">
           <CircleX size={15} /> {b.name}: {results[b.name].message}
         </p>
       ))}

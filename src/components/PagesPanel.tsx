@@ -82,7 +82,7 @@ export default function PagesPanel({ gh, repo, branches, onChanged }: Props) {
         </button>
       </div>
 
-      {message && <p className={message.kind === 'ok' ? 'success small' : 'error small'}>{message.text}</p>}
+      {message && <p className={message.kind === 'ok' ? 'success small' : 'error small'} role={message.kind === 'ok' ? 'status' : 'alert'}>{message.text}</p>}
 
       {state.kind === 'loading' && <p className="muted small">Consultando Pages…</p>}
       {state.kind === 'error' && <p className="error small">{state.message}</p>}

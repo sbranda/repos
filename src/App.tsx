@@ -130,6 +130,12 @@ export default function App() {
   const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
   const visible = useMemo(() => applyFilters(repos, filters), [repos, filters])
   const selected = repos.find((r) => r.id === selectedId) ?? null
+
+  // Al cerrar el detalle, el foco vuelve al repo que estaba abierto (si no, queda perdido).
+  function closeDetail(id: number) {
+    setSelectedId(null)
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`.repo-row[data-repo-id="${id}"]`)?.focus())
+  }
   const checkedRepos = repos.filter((r) => checked.has(r.id))
 
   if (booting) return <div className="login-page"><main className="login muted">Cargando…</main></div>
@@ -171,7 +177,7 @@ export default function App() {
           <WifiOff size={16} /> Sin conexión. Estás viendo la última lista guardada; para cambiar algo hace falta internet.
         </p>
       )}
-      {error && <p className="error banner">{error}</p>}
+      {error && <p className="error banner" role="alert">{error}</p>}
 
       <nav className="tabs" aria-label="Vistas">
         <button className={view === 'repos' ? 'tab active' : 'tab'} aria-current={view === 'repos' ? 'page' : undefined} onClick={() => setView('repos')}>
@@ -238,13 +244,13 @@ export default function App() {
         </section>
 
         {selected && (
-          <section className="detail-pane">
+          <section className="detail-pane" aria-label={`Detalle de ${selected.name}`}>
             <RepoDetail
               key={selected.id}
               gh={gh}
               repo={selected}
               onUpdated={replaceRepo}
-              onClose={() => setSelectedId(null)}
+              onClose={() => closeDetail(selected.id)}
               knownTopics={knownTopics}
               onTopic={(topic) => setFilters({ ...DEFAULT_FILTERS, status: filters.status, topic })}
             />

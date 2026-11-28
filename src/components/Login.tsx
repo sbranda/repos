@@ -80,7 +80,7 @@ export default function Login({ onLogin, onInstall, online }: Props) {
             <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
             Recordarlo en este navegador
           </label>
-          {error && <p className="error">{error}</p>}
+          {error && <p className="error" role="alert">{error}</p>}
           <button type="submit" className="primary big" disabled={loading || !token.trim() || !online}>
             {loading ? 'Entrando…' : 'Entrar'}
           </button>
