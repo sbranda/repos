@@ -137,7 +137,7 @@ export default function App() {
 
   const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
   const { ci, pending: ciPending } = useCiStatuses(gh, repos, savedAt, online, loading)
-  const { favs, toggleFav } = useFavorites()
+  const { favs, toggleFav } = useFavorites(user?.login ?? null)
   useKeyboardShortcuts(!!user)
   const visible = useMemo(() => applyFilters(repos, filters, ci, favs), [repos, filters, ci, favs])
   const selected = repos.find((r) => r.id === selectedId) ?? null
