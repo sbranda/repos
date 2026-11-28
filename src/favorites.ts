@@ -1,28 +1,42 @@
-// Repos favoritos: se guardan en este navegador y se muestran arriba de la lista.
+// Repos favoritos: se guardan en este navegador, aparte para cada cuenta de GitHub,
+// y se muestran arriba de la lista.
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { storage } from './util'
 
-export const FAVS_KEY = 'repos:favs'
+const OLD_KEY = 'repos:favs'
+const key = (login: string) => `repos:favs:${login.toLowerCase()}`
 
-function load(): Set<number> {
+function load(login: string | null): Set<number> {
+  if (!login) return new Set()
   try {
-    const ids = JSON.parse(storage.get(FAVS_KEY) ?? '[]')
+    let raw = storage.get(key(login))
+    // Antes se guardaban sin separar por cuenta: se pasan a la primera cuenta que entra.
+    if (raw === null && (raw = storage.get(OLD_KEY)) !== null) {
+      storage.set(key(login), raw, true)
+      storage.remove(OLD_KEY)
+    }
+    const ids = JSON.parse(raw ?? '[]')
     return new Set(Array.isArray(ids) ? ids.filter((x) => typeof x === 'number') : [])
   } catch {
     return new Set()
   }
 }
 
-export function useFavorites(): { favs: Set<number>; toggleFav: (id: number) => void } {
-  const [favs, setFavs] = useState<Set<number>>(load)
-  const toggleFav = useCallback((id: number) => {
-    setFavs((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      storage.set(FAVS_KEY, JSON.stringify([...next]), true)
-      return next
-    })
-  }, [])
+export function useFavorites(login: string | null): { favs: Set<number>; toggleFav: (id: number) => void } {
+  const [favs, setFavs] = useState<Set<number>>(() => load(login))
+  useEffect(() => setFavs(load(login)), [login])
+  const toggleFav = useCallback(
+    (id: number) => {
+      if (!login) return
+      setFavs((prev) => {
+        const next = new Set(prev)
+        next.has(id) ? next.delete(id) : next.add(id)
+        storage.set(key(login), JSON.stringify([...next]), true)
+        return next
+      })
+    },
+    [login],
+  )
   return { favs, toggleFav }
 }

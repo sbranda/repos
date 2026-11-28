@@ -1,6 +1,8 @@
 # Mis repos
 
-App web para administrar mis repositorios de GitHub desde un solo lugar. Se publica en **https://sbranda.github.io/repos/**.
+App web para administrar tus repositorios de GitHub desde un solo lugar. Se publica en **https://sbranda.github.io/repos/**.
+
+La puede usar **cualquier persona con una cuenta de GitHub**: cada uno entra con su propio token y ve sus propios repos. No hay servidor en el medio: la app habla directo con `api.github.com` desde tu navegador, así que nadie más ve tus datos ni tu token.
 
 ## Qué hace
 
@@ -30,7 +32,13 @@ La app es estática y corre entera en tu navegador. Para hablar con GitHub usa u
 2. En **Repository access** elegí **All repositories**.
 3. En **Permissions → Repository** dale **Administration: Read and write**, **Pages: Read and write** y **Contents**, **Actions**, **Issues**, **Pull requests** y **Dependabot alerts: Read-only**.
 
-El token queda guardado solo en tu navegador y se envía únicamente a `api.github.com`.
+El token queda guardado solo en tu navegador y se envía únicamente a `api.github.com`. Con **Salir** se borra junto con la lista guardada, así que en una compu compartida cada persona puede entrar con su cuenta. Los favoritos se guardan aparte para cada cuenta.
+
+Por ahora se listan los repos de tu cuenta personal (los que sos dueño). Los repos de organizaciones no aparecen.
+
+## Tener tu propia copia
+
+Si preferís publicarla en tu cuenta: hacé un fork, en **Settings → Pages** elegí **GitHub Actions** como Source y hacé un push a `main`. Queda en `https://<tu-usuario>.github.io/repos/`. Si le cambiás el nombre al repo, cambiá también `base` en `vite.config.ts` y las rutas de `public/manifest.webmanifest`.
 
 ## Publicación
 

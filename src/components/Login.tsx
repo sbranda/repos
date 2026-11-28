@@ -38,7 +38,7 @@ export default function Login({ onLogin, onInstall, online }: Props) {
           <h1>
             Tus repos, <span className="gradient-text">bajo control</span>
           </h1>
-          <p className="muted">Buscá, ordená, editá y archivá todos tus repositorios de GitHub desde un solo lugar.</p>
+          <p className="muted">Buscá, ordená, editá y archivá todos tus repositorios de GitHub desde un solo lugar. Sirve para cualquier cuenta: entrás con tu token y ves tus repos.</p>
           <ul className="features">
             <li>
               <Layers size={16} /> Todo en una vista
