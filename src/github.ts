@@ -99,7 +99,13 @@ export interface SearchItem {
   html_url: string
   repository_url: string
   updated_at: string
+  created_at?: string
   draft?: boolean
+  user?: { login: string; avatar_url: string } | null
+  labels?: { name: string; color: string }[]
+  comments?: number
+  /** Presente solo en los PRs. */
+  pull_request?: unknown
 }
 
 export interface SearchResult {
@@ -280,6 +286,24 @@ export class GitHub {
     const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
     const { data } = await this.request<SearchResult>(`/search/issues?q=${q}&sort=updated&order=desc&per_page=${perPage}`)
     return data
+  }
+
+  /**
+   * Todos los PRs o issues abiertos de tus repos (hasta `max`). La búsqueda de GitHub
+   * devuelve de a 100 y como mucho 1000 resultados.
+   */
+  async searchAllOpen(login: string, kind: 'pr' | 'issue', max = 300): Promise<SearchResult> {
+    const q = encodeURIComponent(`is:open is:${kind} user:${login} archived:false`)
+    let next: string | null = `/search/issues?q=${q}&sort=updated&order=desc&per_page=100`
+    const items: SearchItem[] = []
+    let total = 0
+    while (next && items.length < max) {
+      const { data, res }: { data: SearchResult; res: Response } = await this.request<SearchResult>(next)
+      total = data.total_count
+      items.push(...data.items)
+      next = parseNext(res.headers.get('link'))
+    }
+    return { total_count: total, items: items.slice(0, max) }
   }
 
   async updateRepo(repo: Repo, changes: RepoChanges): Promise<Repo> {
