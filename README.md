@@ -28,7 +28,7 @@ La app es estática y corre entera en tu navegador. Para hablar con GitHub usa u
 
 1. Creá un [fine-grained token](https://github.com/settings/personal-access-tokens/new).
 2. En **Repository access** elegí **All repositories**.
-3. En **Permissions → Repository** dale **Administration: Read and write**, **Pages: Read and write** y **Contents**, **Actions**, **Issues** y **Pull requests: Read-only**.
+3. En **Permissions → Repository** dale **Administration: Read and write**, **Pages: Read and write** y **Contents**, **Actions**, **Issues**, **Pull requests** y **Dependabot alerts: Read-only**.
 
 El token queda guardado solo en tu navegador y se envía únicamente a `api.github.com`.
 

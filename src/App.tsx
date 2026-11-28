@@ -8,19 +8,20 @@ import RepoDetail from './components/RepoDetail'
 import BatchBar from './components/BatchBar'
 import Summary from './components/Summary'
 import Inbox from './components/Inbox'
+import Security from './components/Security'
 import { useInstallPrompt, useOnline } from './pwa'
 import Logo from './components/Logo'
 import NewRepoDialog from './components/NewRepoDialog'
 import ThemeToggle from './components/ThemeToggle'
 import { useTheme } from './theme'
 import { clearCi, useCiStatuses } from './ci'
-import { Download, Inbox as InboxIcon, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
+import { Download, Inbox as InboxIcon, ShieldAlert, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
 const VIEW_KEY = 'repos:view'
 
-type View = 'repos' | 'resumen' | 'pendientes'
-const VIEWS: View[] = ['repos', 'resumen', 'pendientes']
+type View = 'repos' | 'resumen' | 'pendientes' | 'seguridad'
+const VIEWS: View[] = ['repos', 'resumen', 'pendientes', 'seguridad']
 
 export default function App() {
   const [gh, setGh] = useState<GitHub | null>(null)
@@ -204,9 +205,29 @@ export default function App() {
         >
           <InboxIcon size={16} /> Pendientes
         </button>
+        <button
+          className={view === 'seguridad' ? 'tab active' : 'tab'}
+          aria-current={view === 'seguridad' ? 'page' : undefined}
+          onClick={() => setView('seguridad')}
+        >
+          <ShieldAlert size={16} /> Seguridad
+        </button>
       </nav>
 
-      {view === 'pendientes' ? (
+      {view === 'seguridad' ? (
+        <div className="layout">
+          <Security
+            gh={gh}
+            login={user.login}
+            repos={repos}
+            online={online}
+            onOpenRepo={(id) => {
+              setSelectedId(id)
+              setView('repos')
+            }}
+          />
+        </div>
+      ) : view === 'pendientes' ? (
         <div className="layout">
           <Inbox
             gh={gh}
