@@ -2368,3 +2368,32 @@ button.repo-link,
 .repo-card.fav {
   border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
 }
+
+/* Atajos de teclado: "/" para buscar (solo se muestra con mouse y teclado) */
+.search-kbd {
+  position: absolute;
+  right: 0.8rem;
+  min-width: 1.5rem;
+  padding: 0.05rem 0.4rem;
+  font: 600 0.8rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  cursor: help;
+}
+.search input:focus ~ .search-kbd,
+.search input:not(:placeholder-shown) ~ .search-kbd {
+  display: none;
+}
+@media (hover: none), (pointer: coarse) {
+  .search-kbd {
+    display: none;
+  }
+}
+/* Al moverse con las flechas, la tarjeta no queda tapada por la barra de arriba */
+.repo-row {
+  scroll-margin: 88px 0 16px;
+}

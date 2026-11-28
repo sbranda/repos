@@ -145,7 +145,8 @@ export default function Security({ gh, login, repos, online, onOpenRepo }: Props
       <div className="filters inbox-filters">
         <div className="search">
           <Search size={18} aria-hidden="true" />
-          <input type="search" placeholder="Buscar por paquete, descripción o CVE" value={text} onChange={(e) => setText(e.target.value)} aria-label="Buscar alertas" />
+          <input type="search" placeholder="Buscar por paquete, descripción o CVE" value={text} onChange={(e) => setText(e.target.value)} aria-label="Buscar alertas" aria-keyshortcuts="/" />
+          <kbd className="search-kbd" aria-hidden="true" title="Atajos: / para buscar, flechas para moverte por la lista">/</kbd>
         </div>
         <div className="filter-row">
           <select value={repoFilter} onChange={(e) => setRepoFilter(e.target.value)} aria-label="Repo">

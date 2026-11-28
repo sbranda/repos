@@ -120,7 +120,8 @@ export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
       <div className="filters inbox-filters">
         <div className="search">
           <Search size={18} aria-hidden="true" />
-          <input type="search" placeholder="Buscar por título, repo o número" value={text} onChange={(e) => setText(e.target.value)} aria-label="Buscar pendientes" />
+          <input type="search" placeholder="Buscar por título, repo o número" value={text} onChange={(e) => setText(e.target.value)} aria-label="Buscar pendientes" aria-keyshortcuts="/" />
+          <kbd className="search-kbd" aria-hidden="true" title="Atajos: / para buscar, flechas para moverte por la lista">/</kbd>
         </div>
         <div className="filter-row">
           <select value={repo} onChange={(e) => setRepo(e.target.value)} aria-label="Repo">
