@@ -2,8 +2,12 @@
 // lo abre en columnas y con tildes bien, y Google Sheets / Numbers lo detectan solos.
 
 import type { Repo, SearchItem } from './github'
+import { CI_LABEL, type CiMap } from './ci'
 
 const SEP = ';'
+
+/** Otras conclusiones de GitHub Actions, en castellano. */
+const OTHER: Record<string, string> = { cancelled: 'Cancelado', skipped: 'Omitido', neutral: 'Neutral', action_required: 'Requiere acción', stale: 'Vencido' }
 
 type Cell = string | number | boolean | null | undefined
 
@@ -43,7 +47,7 @@ export function fileName(kind: string, login: string): string {
   return `${kind}-${login}-${fecha(new Date().toISOString()).slice(0, 10)}.csv`
 }
 
-export function reposCsv(repos: Repo[]): string {
+export function reposCsv(repos: Repo[], ci: CiMap = {}): string {
   return toCsv(
     [
       'Nombre',
@@ -58,6 +62,7 @@ export function reposCsv(repos: Repo[]): string {
       'Sitio (Pages)',
       'Sitio web',
       'Rama principal',
+      'GitHub Actions',
       'Último push',
       'Última actualización',
       'URL',
@@ -75,6 +80,7 @@ export function reposCsv(repos: Repo[]): string {
       r.has_pages,
       r.homepage,
       r.default_branch,
+      r.archived || !ci[r.id] ? '' : ci[r.id].kind === 'other' ? (OTHER[ci[r.id].conclusion ?? ''] ?? ci[r.id].conclusion ?? '') : CI_LABEL[ci[r.id].kind],
       fecha(r.pushed_at),
       fecha(r.updated_at),
       r.html_url,

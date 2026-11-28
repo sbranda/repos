@@ -2162,3 +2162,25 @@ button.repo-link,
   border-color: var(--danger);
   text-decoration: line-through;
 }
+
+/* ============ Estado de GitHub Actions en las tarjetas ============ */
+.badge.ci-badge.ok {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: transparent;
+}
+.badge.ci-badge.fail {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+.badge.ci-badge.running {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-color: transparent;
+}
+.ci-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}

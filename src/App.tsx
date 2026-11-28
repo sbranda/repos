@@ -13,6 +13,7 @@ import Logo from './components/Logo'
 import NewRepoDialog from './components/NewRepoDialog'
 import ThemeToggle from './components/ThemeToggle'
 import { useTheme } from './theme'
+import { clearCi, useCiStatuses } from './ci'
 import { Download, Inbox as InboxIcon, LayoutDashboard, LayoutGrid, LogOut, Plus, RefreshCw, WifiOff } from 'lucide-react'
 
 const TOKEN_KEY = 'repos:token'
@@ -60,6 +61,7 @@ export default function App() {
   const logout = useCallback(() => {
     storage.remove(TOKEN_KEY)
     clearCache()
+    clearCi()
     setSavedAt(null)
     setGh(null)
     setUser(null)
@@ -131,7 +133,8 @@ export default function App() {
   }, [])
 
   const knownTopics = useMemo(() => allTopics(repos).map(([t]) => t), [repos])
-  const visible = useMemo(() => applyFilters(repos, filters), [repos, filters])
+  const { ci, pending: ciPending } = useCiStatuses(gh, repos, savedAt, online, loading)
+  const visible = useMemo(() => applyFilters(repos, filters, ci), [repos, filters, ci])
   const selected = repos.find((r) => r.id === selectedId) ?? null
 
   // Al cerrar el detalle, el foco vuelve al repo que estaba abierto (si no, queda perdido).
@@ -244,6 +247,8 @@ export default function App() {
             onSelect={setSelectedId}
             checked={checked}
             onChecked={setChecked}
+            ci={ci}
+            ciPending={ciPending}
           />
         </section>
 

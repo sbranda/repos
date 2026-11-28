@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Repo } from '../github'
-import { Archive, Clock, Download, GitFork, Globe, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Archive, CircleCheck, CircleX, Clock, Download, GitFork, Globe, LoaderCircle, Lock, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { CI_LABEL, type CiMap } from '../ci'
 import { diasDesde, haceCuanto } from '../util'
 import { languageColor } from '../languages'
 import { download, fileName, reposCsv } from '../csv'
@@ -14,6 +15,8 @@ export interface Filters {
   forks: boolean
   pages: 'all' | 'with' | 'without'
   inactive: 0 | 180 | 365 | 730
+  /** Estado de la última ejecución de GitHub Actions. */
+  ci: 'all' | 'fail' | 'ok' | 'running' | 'none'
   sort: 'pushed' | 'name' | 'stars'
 }
 
@@ -26,10 +29,11 @@ export const DEFAULT_FILTERS: Filters = {
   forks: true,
   pages: 'all',
   inactive: 0,
+  ci: 'all',
   sort: 'pushed',
 }
 
-export function applyFilters(repos: Repo[], f: Filters): Repo[] {
+export function applyFilters(repos: Repo[], f: Filters, ci: CiMap = {}): Repo[] {
   const q = f.text.trim().toLowerCase()
   const out = repos.filter((r) => {
     if (
@@ -49,6 +53,10 @@ export function applyFilters(repos: Repo[], f: Filters): Repo[] {
     if (f.pages === 'with' && !r.has_pages) return false
     if (f.pages === 'without' && r.has_pages) return false
     if (f.inactive && diasDesde(r.pushed_at) < f.inactive) return false
+    if (f.ci !== 'all') {
+      const kind = r.archived ? 'none' : ci[r.id]?.kind
+      if (kind !== f.ci) return false
+    }
     return true
   })
   out.sort((a, b) => {
@@ -72,9 +80,13 @@ interface Props {
   onSelect: (id: number) => void
   checked: Set<number>
   onChecked: (s: Set<number>) => void
+  /** Estado de GitHub Actions por repo. */
+  ci: CiMap
+  /** Cuántos repos faltan consultar. */
+  ciPending: number
 }
 
-export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked }: Props) {
+export default function RepoList({ compact, repos, visible, loading, savedAt, filters, onFilters, selectedId, onSelect, checked, onChecked, ci, ciPending }: Props) {
   const languages = useMemo(
     () => [...new Set(repos.map((r) => r.language ?? 'Sin lenguaje'))].sort((a, b) => a.localeCompare(b)),
     [repos],
@@ -151,6 +163,15 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             <option value={365}>Sin cambios hace 1+ año</option>
             <option value={730}>Sin cambios hace 2+ años</option>
           </select>
+          {(Object.keys(ci).length > 0 || filters.ci !== 'all') && (
+            <select value={filters.ci} onChange={(e) => set('ci', e.target.value as Filters['ci'])} aria-label="GitHub Actions">
+              <option value="all">Cualquier estado de Actions</option>
+              <option value="fail">Actions: falló</option>
+              <option value="ok">Actions: pasó</option>
+              <option value="running">Actions: en curso</option>
+              <option value="none">Sin Actions</option>
+            </select>
+          )}
           <select value={filters.sort} onChange={(e) => set('sort', e.target.value as Filters['sort'])} aria-label="Orden">
             <option value="pushed">Último push</option>
             <option value="name">Nombre</option>
@@ -191,10 +212,15 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
             ) : null}
           </span>
         )}
+        {ciPending > 0 && !loading && (
+          <span className="muted small ci-pending">
+            <LoaderCircle size={13} className="spin" aria-hidden="true" /> Revisando Actions ({ciPending})
+          </span>
+        )}
         {visible.length > 0 && (
           <button
             className="small-btn"
-            onClick={() => download(fileName('repos', repos[0]?.owner.login ?? 'github'), reposCsv(visible))}
+            onClick={() => download(fileName('repos', repos[0]?.owner.login ?? 'github'), reposCsv(visible, ci))}
             title="Descargar los repos que se ven, con los filtros aplicados"
           >
             <Download size={14} /> Exportar CSV
@@ -253,6 +279,7 @@ export default function RepoList({ compact, repos, visible, loading, savedAt, fi
                     <GitFork size={12} /> Fork
                   </span>
                 )}
+                {!r.archived && <CiBadge info={ci[r.id]} />}
               </span>
               <span className="repo-desc">{r.description || <i className="muted">Sin descripción</i>}</span>
               {!!r.topics?.length && (
@@ -298,4 +325,18 @@ export function allTopics(repos: Repo[]): [string, number][] {
   const count = new Map<string, number>()
   for (const r of repos) for (const t of r.topics ?? []) count.set(t, (count.get(t) ?? 0) + 1)
   return [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+/** Insignia con la última ejecución de GitHub Actions. No muestra nada si el repo no usa Actions. */
+function CiBadge({ info }: { info: CiMap[number] | undefined }) {
+  if (!info || info.kind === 'none' || info.kind === 'other') return null
+  const Icon = info.kind === 'ok' ? CircleCheck : info.kind === 'fail' ? CircleX : LoaderCircle
+  const text = info.kind === 'ok' ? 'CI' : `CI ${CI_LABEL[info.kind].toLowerCase()}`
+  return (
+    <span className={`badge ci-badge ${info.kind}`} title={`GitHub Actions: ${CI_LABEL[info.kind].toLowerCase()}${info.name ? ` (${info.name})` : ''}`}>
+      <Icon size={12} className={info.kind === 'running' ? 'spin' : ''} aria-hidden="true" />
+      <span aria-hidden="true">{text}</span>
+      <span className="sr-only">GitHub Actions: {CI_LABEL[info.kind].toLowerCase()}</span>
+    </span>
+  )
 }
