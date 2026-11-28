@@ -7,6 +7,8 @@ import { download, fileName, pendientesCsv } from '../csv'
 interface Props {
   gh: GitHub
   login: string
+  /** Cuentas cuyos repos se miran (la tuya y/o organizaciones). */
+  owners: string[]
   repos: Repo[]
   online: boolean
   onOpenRepo: (id: number) => void
@@ -23,7 +25,7 @@ interface Item extends SearchItem {
 type Load = { state: 'loading' } | { state: 'ok'; items: Item[]; truncated: boolean } | { state: 'error'; message: string }
 
 /** Todos los PRs e issues abiertos de tus repos en una sola lista. */
-export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
+export default function Inbox({ gh, login, owners, repos, online, onOpenRepo }: Props) {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [refreshing, setRefreshing] = useState(false)
   const [refreshError, setRefreshError] = useState<string | null>(null)
@@ -37,7 +39,7 @@ export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
     setRefreshing(true)
     setRefreshError(null)
     try {
-      const [prs, issues] = await Promise.all([gh.searchAllOpen(login, 'pr'), gh.searchAllOpen(login, 'issue')])
+      const [prs, issues] = await Promise.all([gh.searchAllOpen(owners, 'pr'), gh.searchAllOpen(owners, 'issue')])
       const tag = (kind: 'pr' | 'issue') => (i: SearchItem) => ({ ...i, kind, repoName: i.repository_url.split('/').pop() ?? '' })
       setLoad({
         state: 'ok',
@@ -52,7 +54,7 @@ export default function Inbox({ gh, login, repos, online, onOpenRepo }: Props) {
     } finally {
       setRefreshing(false)
     }
-  }, [gh, login])
+  }, [gh, owners])
 
   useEffect(() => {
     fetchAll()

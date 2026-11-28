@@ -17,7 +17,8 @@ import { diasDesde, haceCuanto } from '../util'
 
 interface Props {
   gh: GitHub
-  login: string
+  /** Cuentas cuyos repos se miran (la tuya y/o organizaciones). */
+  owners: string[]
   repos: Repo[]
   loading: boolean
   onOpenRepo: (id: number) => void
@@ -35,14 +36,14 @@ const AGE_BUCKETS = [
 
 const TOP_LANGUAGES = 8
 
-export default function Summary({ gh, login, repos, loading, onOpenRepo }: Props) {
+export default function Summary({ gh, owners, repos, loading, onOpenRepo }: Props) {
   const [prs, setPrs] = useState<Search>({ state: 'loading' })
   const [issues, setIssues] = useState<Search>({ state: 'loading' })
 
   useEffect(() => {
     let alive = true
     const run = (kind: 'pr' | 'issue', set: (s: Search) => void) =>
-      gh.searchOpen(login, kind).then(
+      gh.searchOpen(owners, kind).then(
         (data) => alive && set({ state: 'ok', data }),
         (err) => alive && set({ state: 'error', message: err instanceof Error ? err.message : String(err) }),
       )
@@ -51,7 +52,7 @@ export default function Summary({ gh, login, repos, loading, onOpenRepo }: Props
     return () => {
       alive = false
     }
-  }, [gh, login])
+  }, [gh, owners])
 
   const active = useMemo(() => repos.filter((r) => !r.archived), [repos])
 

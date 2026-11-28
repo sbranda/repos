@@ -3,6 +3,7 @@ import { Archive, Download, KeyRound, Layers, ShieldCheck, WifiOff, Zap } from '
 import Logo from './Logo'
 
 const TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new'
+const CLASSIC_URL = 'https://github.com/settings/tokens/new?scopes=repo,security_events&description=Mis%20repos'
 
 interface Props {
   onLogin: (token: string, remember: boolean) => Promise<void>
@@ -124,6 +125,14 @@ export default function Login({ onLogin, onInstall, online }: Props) {
             </li>
             <li>Generalo y pegalo arriba.</li>
           </ol>
+          <p className="small">
+            <b>¿Repos de organizaciones?</b> Un fine-grained token sirve para una sola cuenta: en <b>Resource owner</b> elegís tu usuario o una
+            organización (puede que un admin de la organización lo tenga que aprobar). Para ver tu cuenta y tus organizaciones juntas, usá un{' '}
+            <a href={CLASSIC_URL} target="_blank" rel="noreferrer">
+              token classic
+            </a>{' '}
+            con los permisos <b>repo</b> y <b>security_events</b>. Si la organización usa SSO, después tocá <b>Configure SSO</b> en el token y autorizala.
+          </p>
         </details>
       </main>
     </div>
